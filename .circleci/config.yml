@@ -1,0 +1,92 @@
+version: 2.1
+
+jobs:
+  test:
+    docker: &DOCKERIMAGE
+      - image: jenkinsrise/gcloud-nodejs-npm-redis
+    steps:
+      - checkout
+      - restore_cache:
+          key: node-cache-{{ checksum "package.json" }}
+      - run: npm install
+      - save_cache:
+          key: node-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run: echo RUN TESTS
+
+  build-image:
+    docker: *DOCKERIMAGE
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo Building version ${CIRCLE_SHA1}
+      - run: "echo ${ACCT_AUTH} | base64 -d > ${HOME}/gcloud-service-key.json"
+      - run:
+          name: save credentials file so it gets included in docker image
+          command: cp ${HOME}/gcloud-service-key.json src/gcloud-service-key.json
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud config set project $PROJECT_ID
+      - setup_remote_docker
+      - run: docker build -t $DOCKER_IMAGE_NAME:${CIRCLE_SHA1} .
+      - run: docker images
+      - run: docker save $DOCKER_IMAGE_NAME:${CIRCLE_SHA1} > dockerImage.tar
+      - persist_to_workspace:
+          root: .
+          paths:
+            - dockerImage.tar
+
+  deploy-staging:
+    docker: *DOCKERIMAGE
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: "echo ${ACCT_AUTH} | base64 -d > ${HOME}//gcloud-service-key.json"
+      - run: gcloud --quiet config set container/cluster messaging-service-stage
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
+      - run: gcloud config set container/use_client_certificate True
+      - run: gcloud config set project $PROJECT_ID
+      - run: gcloud --quiet container clusters get-credentials messaging-service-stage
+      - run: echo "Staging ${CIRCLE_SHA1}"
+      - run: echo "Pushing image $DOCKER_IMAGE_NAME to registry..."
+      - setup_remote_docker
+      - run: docker load < ./dockerImage.tar
+      - run: gcloud docker -- push ${DOCKER_IMAGE_NAME}
+      - run: kubectl patch deployment twitter-service -p '{"spec":{"template":{"spec":{"containers":[{"name":"twitter-service","image":"'"$DOCKER_IMAGE_NAME"':'"${CIRCLE_SHA1}"'"}]}}}}'
+
+  deploy-production:
+    docker: *DOCKERIMAGE
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: "echo ${ACCT_AUTH} | base64 -d > ${HOME}//gcloud-service-key.json"
+      - run: gcloud --quiet config set container/cluster messaging-service-prod
+      - run: gcloud auth activate-service-account --key-file ${HOME}/gcloud-service-key.json
+      - run: gcloud config set compute/zone ${CLOUDSDK_COMPUTE_ZONE}
+      - run: gcloud config set container/use_client_certificate True
+      - run: gcloud config set project $PROJECT_ID
+      - run: gcloud --quiet container clusters get-credentials messaging-service-prod
+      - run: echo "Releasing ${CIRCLE_SHA1}"
+      - run: echo NOT YET DEPLOYING TO STABLE !
+
+workflows:
+  workflow1:
+    jobs:
+      - test
+      - build-image:
+          requires:
+            - test
+      - deploy-staging:
+          requires:
+            - build-image
+      - deploy-production:
+          requires:
+            - deploy-staging
+          filters:
+            branches:
+              only:
+                - master

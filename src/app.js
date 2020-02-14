@@ -12,7 +12,10 @@ const redis = require("redis-promise");
 const gkeHostname = "ts-redis-master";
 const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 
-app.get('/twitterservice', function(req, res) {
+// This is required by ingress health check
+app.get("/", (req, res)=>res.end());
+
+app.get('/twitter', function(req, res) {
   res.send(`Twitter Service: ${podname} ${pkg.version}`);
 });
 
