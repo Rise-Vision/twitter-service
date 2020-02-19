@@ -39,10 +39,7 @@ const handleVerifyCredentialsRequest = (req, res) => {
       const companyId = req.body.companyId;
 
       if (!keys || keys.length === 0) {
-        return res.json({
-          success: false,
-          message: `No credentials for: ${companyId}:twitter`
-        });
+        return Promise.reject(new Error(`No credentials for: ${companyId}:twitter`));
       }
 
       return getCredentials(companyId, keys[0]);
@@ -54,6 +51,13 @@ const handleVerifyCredentialsRequest = (req, res) => {
       res.json({success: true});
     })
     .catch(error=>{
+      if (error.message.includes("No credentials")) {
+        return res.json({
+          success: false,
+          message: error.message
+        });
+      }
+
       handleError(res, error, "Error when verifying credentials");
     });
 }
