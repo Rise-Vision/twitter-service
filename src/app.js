@@ -21,7 +21,7 @@ app.get('/twitter', function(req, res) {
   res.send(`Twitter Service: ${podname} ${pkg.version}`);
 });
 
-app.get("/twitter/verify-credentials", credentials.handleVerifyCredentialsRequest);
+app.post("/twitter/verify-credentials", jsonParser, credentials.handleVerifyCredentialsRequest);
 
 const start = ()=>{
   server.listen(port, (err) => {
