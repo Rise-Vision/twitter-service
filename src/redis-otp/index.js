@@ -14,9 +14,7 @@ const getCredentials = key => {
 };
 
 const init = () => {
-  otpRedis = redis.createClient({host: redisHost});
-
-  otpRedis.on("error", console.error);
+  otpRedis = redis.initdb(null, redisHost);
 };
 
 module.exports = {
