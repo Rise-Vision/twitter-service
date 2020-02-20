@@ -4,8 +4,8 @@ const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 
 let otpRedis = null;
 
-const checkKey = (companyId) => {
-  return redis.getSet(`${companyId}:twitter`);
+const checkKey = (req) => {
+  return redis.getSet(`${req.body.companyId}:twitter`);
 };
 
 const getCredentials = key => {
