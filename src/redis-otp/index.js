@@ -4,13 +4,39 @@ const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 
 let otpRedis = null;
 
-const checkKey = (req) => {
-  return redis.getSet(`${req.body.companyId}:twitter`);
+const getKeys = (companyId) => {
+  return redis.getSet(`${companyId}:twitter`);
 };
 
-const getCredentials = key => {
+const getCredentialsVal = key => {
   return redis.getString(key)
     .then(stringCredentials => JSON.parse(stringCredentials));
+};
+
+const validateKeys = (keys,companyId) => {
+  if (!keys || keys.length === 0) {
+    return Promise.reject(new Error(`No credentials for: ${companyId}:twitter`));
+  }
+};
+
+const getCredentials = (req) => {
+  const {companyId} = req.query;
+  let key = null;
+
+  return getKeys(companyId)
+    .then(keys => validateKeys(keys, companyId))
+    .then(keys => {
+      key = `${companyId}:twitter:${keys[0]}`;
+
+      return getCredentialsVal(key);
+    })
+    .then(credentials=>{
+      if (!credentials) {
+        throw new Error(`Could not read credentials for: ${key}`);
+      }
+
+      return Promise.resolve(credentials);
+    });
 };
 
 const init = () => {
@@ -18,7 +44,6 @@ const init = () => {
 };
 
 module.exports = {
-  checkKey,
   getCredentials,
   init
 };
