@@ -1,4 +1,4 @@
-const db = require("../redis-otp");
+const db = require("../redis-otp/api");
 const invalidInputError = new Error("Invalid input");
 
 const CLIENT_ERROR = 400;

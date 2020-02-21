@@ -1,6 +1,4 @@
-const redis = require("redis-promise");
-const gkeHostname = "otp-redis-master";
-const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
+const redis = require("./datastore");
 
 const getKeys = (companyId) => {
   return redis.getSet(`${companyId}:twitter`);
@@ -34,16 +32,6 @@ const getCredentials = (req) => {
     });
 };
 
-const init = () => {
-  redis.initdb(null, redisHost);
-};
-
-const close = () => {
-  redis.close();
-};
-
 module.exports = {
-  close,
-  getCredentials,
-  init
+  getCredentials
 };
