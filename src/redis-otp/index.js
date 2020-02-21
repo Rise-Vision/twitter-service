@@ -13,19 +13,16 @@ const getCredentialsVal = key => {
     .then(stringCredentials => JSON.parse(stringCredentials));
 };
 
-const validateKeys = (keys,companyId) => {
-  if (!keys || keys.length === 0) {
-    return Promise.reject(new Error(`No credentials for: ${companyId}:twitter`));
-  }
-};
-
 const getCredentials = (req) => {
   const {companyId} = req.query;
   let key = null;
 
   return getKeys(companyId)
-    .then(keys => validateKeys(keys, companyId))
     .then(keys => {
+      if (!keys || keys.length === 0) {
+        return Promise.reject(new Error(`No credentials for: ${companyId}:twitter`));
+      }
+
       key = `${companyId}:twitter:${keys[0]}`;
 
       return getCredentialsVal(key);
