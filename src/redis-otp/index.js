@@ -38,7 +38,12 @@ const init = () => {
   redis.initdb(null, redisHost);
 };
 
+const close = () => {
+  redis.close();
+};
+
 module.exports = {
+  close,
   getCredentials,
   init
 };

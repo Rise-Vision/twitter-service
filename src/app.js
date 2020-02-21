@@ -8,7 +8,7 @@ const port = process.env.TS_PORT || config.defaultPort;
 const app = express();
 const server = http.createServer(app);
 const podname = process.env.podname;
-const redis = require("redis-promise");
+// const redis = require("redis-promise");
 const redisOTP = require("./redis-otp");
 const gkeHostname = "ts-redis-master";
 const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
@@ -31,13 +31,13 @@ const start = ()=>{
 
     console.log(`server is listening on ${port}`);
 
-    redis.initdb(null, redisHost);
+    //redis.initdb(null, redisHost);
     redisOTP.init();
   })
 };
 
 const stop = ()=>{
-  redis.close();
+  redisOTP.close();
   server.close();
 };
 
