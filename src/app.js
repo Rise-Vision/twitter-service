@@ -7,12 +7,15 @@ const jsonParser = bodyParser.json(); // eslint-disable-line no-unused-vars
 const port = process.env.TS_PORT || config.defaultPort;
 const app = express();
 const server = http.createServer(app);
+const headers = require("./middleware/headers");
 const podname = process.env.podname;
 const redis = require("redis-promise");
 const redisOTP = require("./redis-otp/datastore");
 const gkeHostname = "ts-redis-master";
 const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 const credentials = require("./credentials");
+
+app.use(headers.setHeaders);
 
 // This is required by ingress health check
 app.get("/", (req, res)=>res.end());
@@ -37,6 +40,7 @@ const start = ()=>{
 };
 
 const stop = ()=>{
+  redisOTP.close();
   redis.close();
   server.close();
 };

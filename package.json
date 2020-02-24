@@ -4,6 +4,7 @@
   "description": "Rise Vision Twitter Service",
   "main": "index.js",
   "scripts": {
+    "test": "eslint . && mocha -t 20000 -r test/mocha-env.js test/unit/** test/integration/**",
     "dev": "TS_PORT=8080 NODE_ENV=test nodemon index.js",
     "start": "node index.js"
   },

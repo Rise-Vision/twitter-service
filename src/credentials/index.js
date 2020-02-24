@@ -1,4 +1,6 @@
 const db = require("../redis-otp/api");
+const twitter = require('../twitter');
+
 const invalidInputError = new Error("Invalid input");
 
 const CLIENT_ERROR = 400;
@@ -20,16 +22,14 @@ const handleError = (res, error, errorMessage) => {
 };
 
 const handleVerifyCredentialsRequest = (req, res) => {
-  validateQueryParams(req)
+  return validateQueryParams(req)
     .then(() => db.getCredentials(req, res))
-    .then(credentials => {
-      // temporarily respond with success
+    .then(twitter.verifyCredentials)
+    .then(() => {
       res.json({success: true});
-
-      // TODO: validate credentials
     })
-    .catch(error=>{
-      if (error.message.includes("No credentials for")) {
+    .catch(error => {
+      if (isExpectedError(error)) {
         return res.json({
           success: false,
           message: error.message
@@ -38,6 +38,10 @@ const handleVerifyCredentialsRequest = (req, res) => {
 
       handleError(res, error, "Error when verifying credentials");
     });
+}
+
+const isExpectedError = err => {
+  return err.message && (err.message.includes("No credentials for") || err.message === "Invalid or expired token.");
 }
 
 module.exports = {
