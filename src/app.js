@@ -12,7 +12,7 @@ const redisOTP = require("./redis-otp/datastore");
 const gkeHostname = "ts-redis-master";
 const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 const credentials = require("./credentials");
-const timeline = require("./timeline");
+const timelines = require("./timelines");
 
 app.use(headers.setHeaders);
 
@@ -24,7 +24,7 @@ app.get('/twitter', function(req, res) {
 });
 
 app.get("/twitter/verify-credentials", credentials.handleVerifyCredentialsRequest);
-app.get("/twitter/get-tweets", timeline.handleGetTweetsRequest);
+app.get("/twitter/get-tweets", timelines.handleGetTweetsRequest);
 
 const start = ()=>{
   server.listen(port, (err) => {
