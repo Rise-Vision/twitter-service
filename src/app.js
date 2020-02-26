@@ -2,8 +2,6 @@ const express = require("express");
 const http = require("http");
 const pkg = require("../package.json");
 const config = require("./config");
-const bodyParser = require("body-parser");
-const jsonParser = bodyParser.json(); // eslint-disable-line no-unused-vars
 const port = process.env.TS_PORT || config.defaultPort;
 const app = express();
 const server = http.createServer(app);
@@ -14,6 +12,7 @@ const redisOTP = require("./redis-otp/datastore");
 const gkeHostname = "ts-redis-master";
 const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 const credentials = require("./credentials");
+const timeline = require("./timeline");
 
 app.use(headers.setHeaders);
 
@@ -25,6 +24,7 @@ app.get('/twitter', function(req, res) {
 });
 
 app.get("/twitter/verify-credentials", credentials.handleVerifyCredentialsRequest);
+app.get("/twitter/get-tweets", timeline.handleGetTweetsRequest);
 
 const start = ()=>{
   server.listen(port, (err) => {
