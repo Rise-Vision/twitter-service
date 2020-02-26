@@ -4,7 +4,7 @@ const twitter = require('../twitter');
 
 const { FORBIDDEN_ERROR, SERVER_ERROR } = constants;
 
-const logAndSendError = (res, error, status) {
+const logAndSendError = (res, error, status) => {
   console.error(error);
 
   res.status(status);
