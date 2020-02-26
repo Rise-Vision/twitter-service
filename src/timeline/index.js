@@ -27,7 +27,7 @@ const handleGetTweetsRequest = (req, res) => {
   // TODO parameter validation in next card
 
   return oauthTokenProvider.getCredentials(req)
-    .then(() => getUserTimeline(req, res, credentials))
+    .then(credentials => getUserTimeline(req, res, credentials))
     .catch(error => logAndSendError(res, error, FORBIDDEN_ERROR));
 }
 
