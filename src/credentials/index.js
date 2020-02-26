@@ -1,10 +1,10 @@
+const constants = require('../constants');
 const db = require("../redis-otp/api");
 const twitter = require('../twitter');
 
 const invalidInputError = new Error("Invalid input");
 
-const CLIENT_ERROR = 400;
-const SERVER_ERROR = 500;
+const { BAD_REQUEST_ERROR, SERVER_ERROR } = constants;
 
 const validateQueryParams = (req) => {
   const {companyId} = req.query;
@@ -17,13 +17,13 @@ const validateQueryParams = (req) => {
 
 const handleError = (res, error, errorMessage) => {
   console.log(errorMessage, error);
-  res.status(error === invalidInputError ? CLIENT_ERROR : SERVER_ERROR);
+  res.status(error === invalidInputError ? BAD_REQUEST_ERROR : SERVER_ERROR);
   res.send(error.message);
 };
 
 const handleVerifyCredentialsRequest = (req, res) => {
   return validateQueryParams(req)
-    .then(() => db.getCredentials(req, res))
+    .then(() => db.getCredentials(req))
     .then(twitter.verifyCredentials)
     .then(() => {
       res.json({success: true});
