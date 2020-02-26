@@ -43,5 +43,6 @@ const invokeEndpoint = (clientCredentials, endpoint, args) => {
 };
 
 module.exports = {
+  getUserTimeline,
   verifyCredentials
 };
