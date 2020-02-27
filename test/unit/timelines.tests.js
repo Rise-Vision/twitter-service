@@ -7,7 +7,7 @@ const timelines = require("../../src/timelines");
 const twitter = require("../../src/twitter");
 
 const sample2Tweets = require("./samples/tweets-2").data;
-const sample20Tweets = require("./samples/tweets-20").data;
+const sample30Tweets = require("./samples/tweets-30").data;
 
 const { FORBIDDEN_ERROR, SERVER_ERROR } = constants;
 
@@ -81,8 +81,8 @@ describe("Timelines", () => {
       });
     });
 
-    it("should return 10 tweets by default", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample20Tweets);
+    it("should return 25 tweets by default", () => {
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
@@ -91,7 +91,7 @@ describe("Timelines", () => {
         const data = res.json.lastCall.args[0];
         assert(data);
         assert(data.tweets);
-        assert.equal(10, data.tweets.length);
+        assert.equal(25, data.tweets.length);
 
         assert(!res.status.called);
         assert(!res.send.called);
@@ -101,7 +101,7 @@ describe("Timelines", () => {
     it("should limit number of tweets based on count param", () => {
       req.query.count = "15";
 
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample20Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
