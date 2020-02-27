@@ -6,13 +6,10 @@ const constants = require("../../src/constants");
 const timelines = require("../../src/timelines");
 const twitter = require("../../src/twitter");
 
-const { FORBIDDEN_ERROR, SERVER_ERROR } = constants;
+const sample2Tweets = require("./samples/tweets-2").data;
+const sample30Tweets = require("./samples/tweets-30").data;
 
-// TODO: extract to real tweets structure in following cards.
-const sampleTweets = [
-  { "id": "1" },
-  { "id": "2" }
-];
+const { FORBIDDEN_ERROR, SERVER_ERROR } = constants;
 
 describe("Timelines", () => {
   let req = null;
@@ -70,14 +67,50 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if Twitter API call is successful", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweets
+          tweets: sample2Tweets
         });
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+      });
+    });
+
+    it("should return 25 tweets by default", () => {
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+
+        const data = res.json.lastCall.args[0];
+        assert(data);
+        assert(data.tweets);
+        assert.equal(25, data.tweets.length);
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+      });
+    });
+
+    it("should limit number of tweets based on count param", () => {
+      req.query.count = "15";
+
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+
+        const data = res.json.lastCall.args[0];
+        assert(data);
+        assert(data.tweets);
+        assert.equal(15, data.tweets.length);
 
         assert(!res.status.called);
         assert(!res.send.called);
