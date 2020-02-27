@@ -9,7 +9,7 @@ const twitter = require("../../src/twitter");
 const sample2Tweets = require("./samples/tweets-2").data;
 const sample30Tweets = require("./samples/tweets-30").data;
 
-const { FORBIDDEN_ERROR, SERVER_ERROR } = constants;
+const { BAD_REQUEST_ERROR, FORBIDDEN_ERROR, SERVER_ERROR } = constants;
 
 describe("Timelines", () => {
   let req = null;
@@ -36,6 +36,81 @@ describe("Timelines", () => {
   });
 
   describe("handleGetTweetsRequest", () => {
+    it("should reject if company id was not provided", () => {
+      req.query.companyId = '';
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Company id was not provided");
+      });
+    });
+
+    it("should reject if username was not provided", () => {
+      req.query.username = '';
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Username was not provided");
+      });
+    });
+
+    it("should reject if an invalid count is provided", () => {
+      req.query.count = 'pato10';
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "'count' is not a valid integer value: pato10");
+      });
+    });
+
+    it("should reject if a high count is provided", () => {
+      req.query.count = '101';
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "'count' is out of range: 101");
+      });
+    });
+
+    it("should reject if a zero count is provided", () => {
+      req.query.count = '0';
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "'count' is out of range: 0");
+      });
+    });
+
     it("should reject if credentials do not exist", () => {
       simple.mock(db, "getCredentials").rejectWith(new Error("No credentials for"));
 
