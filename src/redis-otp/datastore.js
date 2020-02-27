@@ -1,7 +1,8 @@
+const config = require("../config");
 const util = require("util");
 const redis = require("redis");
-const gkeHostname = "otp-redis-master";
-const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
+
+const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : config.redisOtpHostname;
 
 let client = null;
 let promisified = ["get", "del", "set", "sadd", "srem", "hmset", "hgetall", "hdel", "smembers", "flushall", "exists", "incr"];
