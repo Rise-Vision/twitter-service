@@ -1,8 +1,10 @@
+const config = require('../config');
 const Twitter = require('twitter');
 const TwitterCredentials = require('./twitter-app-credentials');
 
 const consumerKey = TwitterCredentials.consumer_key;
 const consumerSecret = TwitterCredentials.consumer_secret;
+const { numberOfCachedTweets } = config
 
 const createInstance = (clientCredentials) => {
   const client = new Twitter({
@@ -22,6 +24,15 @@ const verifyCredentials = credentials => {
     });
 };
 
+const getUserTimeline = (credentials, username) => {
+  const args = {
+    screen_name: username,
+    count: numberOfCachedTweets
+  }
+
+  return invokeEndpoint(credentials, 'statuses/user_timeline', args);
+};
+
 const invokeEndpoint = (clientCredentials, endpoint, args) => {
   const client = createInstance(clientCredentials);
 
@@ -32,5 +43,6 @@ const invokeEndpoint = (clientCredentials, endpoint, args) => {
 };
 
 module.exports = {
+  getUserTimeline,
   verifyCredentials
 };

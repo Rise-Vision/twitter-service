@@ -16,7 +16,7 @@ const validateQueryParams = (req) => {
 };
 
 const handleError = (res, error, errorMessage) => {
-  console.log(errorMessage, error);
+  console.error(errorMessage, error);
   res.status(error === invalidInputError ? BAD_REQUEST_ERROR : SERVER_ERROR);
   res.send(error.message);
 };

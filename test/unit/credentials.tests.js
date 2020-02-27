@@ -1,12 +1,12 @@
 const assert = require("assert");
 const simple = require("simple-mock");
 
+const constants = require("../../src/constants");
 const credentials = require("../../src/credentials");
 const db = require("../../src/redis-otp/api");
 const twitter = require("../../src/twitter");
 
-const CLIENT_ERROR = 400;
-const SERVER_ERROR = 500;
+const { BAD_REQUEST_ERROR, SERVER_ERROR } = constants;
 
 describe("Credentials", () => {
   let req = null;
@@ -33,7 +33,7 @@ describe("Credentials", () => {
     it("should reject if companyId is not provided", (done) => {
       credentials.handleVerifyCredentialsRequest({query: {}}, res)
       .then(() => {
-        assert.equal(res.status.lastCall.args[0], CLIENT_ERROR);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
         done();
       });
     });

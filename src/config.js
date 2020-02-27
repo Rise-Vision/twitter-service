@@ -1,3 +1,4 @@
 module.exports = {
-  defaultPort: 80
+  defaultPort: 80,
+  numberOfCachedTweets: 100
 };
