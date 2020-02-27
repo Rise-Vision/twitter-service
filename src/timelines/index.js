@@ -5,14 +5,32 @@ const twitter = require('../twitter');
 
 const { BAD_REQUEST_ERROR, FORBIDDEN_ERROR, SERVER_ERROR } = constants;
 
-const validateQueryParams = (req) => {
-  // TODO full validation in next card
+const validationErrorFor = message => Promise.reject(new Error(message));
 
-  const { count } = req.query;
+const validateQueryParams = (req) => {
+  const {companyId, count, username} = req.query;
+
+  if (!companyId) {
+    return validationErrorFor("Company id was not provided");
+  }
+
+  if (!username) {
+    return validationErrorFor("Username was not provided");
+  }
+
+  if (count && !/^\d+$/.test(count)) {
+    return validationErrorFor(`'count' is not a valid integer value: ${count}`);
+  }
+
+  const countNumber = count ? Number(count) : config.defaultTweetCount;
+
+  if(countNumber < 1 || countNumber > config.numberOfCachedTweets) {
+    return validationErrorFor(`'count' is out of range: ${countNumber}`);
+  }
 
   return Promise.resolve({
     ...req.query,
-    count: count ? Number(count) : config.defaultTweetCount
+    count: countNumber
   });
 };
 
@@ -44,10 +62,6 @@ const handleGetTweetsRequest = (req, res) => {
   })
   .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
 }
-
-const isCredentialsNotFound = err => {
-  return err.message && err.message.includes("No credentials for");
-};
 
 module.exports = {
   handleGetTweetsRequest
