@@ -3,6 +3,7 @@ const simple = require("simple-mock");
 
 const cache = require('../../src/redis-cache/api');
 const oauthTokenProvider = require("../../src/redis-otp/api");
+const config = require("../../src/config");
 const constants = require("../../src/constants");
 const timelines = require("../../src/timelines");
 const twitter = require("../../src/twitter");
@@ -133,7 +134,10 @@ describe("Timelines", () => {
     });
 
     it("should reject if the loading flag is set", () => {
-      simple.mock(cache, "getStatusFor").resolveWith({loading: true});
+      simple.mock(cache, "getStatusFor").resolveWith({
+        loading: true,
+        loadingStarted: new Date().getTime()
+      });
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
@@ -212,6 +216,35 @@ describe("Timelines", () => {
 
         assert(!res.status.called);
         assert(!res.send.called);
+      });
+    });
+
+    it("should return tweets if loading is turned on but it has expired", () => {
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(cache, "getStatusFor").resolveWith({
+        loading: true,
+        loadingStarted: new Date().getTime() - config.loadingFlagTimeoutInMillis - 1
+      });
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+        assert.deepEqual(res.json.lastCall.args[0], {
+          tweets: sample2Tweets
+        });
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
       });
     });
 

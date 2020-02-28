@@ -11,6 +11,8 @@ const {
 
 const validationErrorFor = message => Promise.reject(new Error(message));
 
+const currentTimestamp = () => new Date().getTime();
+
 const validateQueryParams = (req) => {
   const {companyId, count, username} = req.query;
 
@@ -50,7 +52,13 @@ const logAndSendError = (res, error, status) => {
 };
 
 const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
-  // TODO check cached entries in other card and check loading flag age in next PR
+  const elapsed = currentTimestamp() - query.status.loadingStarted;
+
+  if(elapsed > config.loadingFlagTimeoutInMillis) {
+    return requestRemoteUserTimeline(query, res, credentials);
+  }
+
+  // TODO check cached entries will be implemented in other card
 
   sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
 };
