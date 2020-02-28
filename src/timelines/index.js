@@ -1,9 +1,13 @@
 const config = require('../config');
 const constants = require('../constants');
+const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
 
-const { BAD_REQUEST_ERROR, FORBIDDEN_ERROR, SERVER_ERROR } = constants;
+const {
+  BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
+  SERVER_ERROR
+} = constants;
 
 const validationErrorFor = message => Promise.reject(new Error(message));
 
@@ -34,19 +38,38 @@ const validateQueryParams = (req) => {
   });
 };
 
+const sendError = (res, message, status) => {
+  res.status(status);
+  res.send(message);
+};
+
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
-  res.status(status);
-  res.send(error.message);
+  sendError(res, error.message, status);
+};
+
+const handleAnotherRequestIsAlreadyLoadingUserTimeline = (res, credentials, query) => {
+  // TODO check cached entries in other card and check loading flag age in next PR
+
+  sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
 };
 
 const getUserTimeline = (query, res, credentials) => {
-  return twitter.getUserTimeline(credentials, query.username)
-  .then(timeline => {
-    const tweets = timeline.slice(0, query.count);
+  return cache.getStatusFor(query.username)
+  .then(status => {
+    query.status = status || {};
 
-    res.json({tweets});
+    if(status && status.loading) {
+      return handleAnotherRequestIsAlreadyLoadingUserTimeline(res, credentials, query);
+    } else {
+      return twitter.getUserTimeline(credentials, query.username)
+      .then(timeline => {
+        const tweets = timeline.slice(0, query.count);
+
+        res.json({tweets});
+      });
+    }
   })
   .catch(error => {
     logAndSendError(res, error, SERVER_ERROR);

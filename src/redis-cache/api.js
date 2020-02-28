@@ -9,6 +9,13 @@ const getStatusFor = username => {
   .then(asJSON);
 };
 
+const saveStatus = (username, status) => {
+  const value = JSON.stringify(status);
+
+  return redis.setString(statusKeyFor(username), value);
+};
+
 module.exports = {
-  getStatusFor
+  getStatusFor,
+  saveStatus
 };
