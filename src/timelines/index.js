@@ -49,10 +49,16 @@ const logAndSendError = (res, error, status) => {
   sendError(res, error.message, status);
 };
 
-const handleAnotherRequestIsAlreadyLoadingUserTimeline = (res, credentials, query) => {
+const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
   // TODO check cached entries in other card and check loading flag age in next PR
 
   sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
+};
+
+const returnTimeline = (query, res, timeline) => {
+  const tweets = timeline.slice(0, query.count);
+
+  res.json({tweets});
 };
 
 const getUserTimeline = (query, res, credentials) => {
@@ -61,14 +67,13 @@ const getUserTimeline = (query, res, credentials) => {
     query.status = status || {};
 
     if(status && status.loading) {
-      return handleAnotherRequestIsAlreadyLoadingUserTimeline(res, credentials, query);
+      return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
     } else {
-      return twitter.getUserTimeline(credentials, query.username)
-      .then(timeline => {
-        const tweets = timeline.slice(0, query.count);
+      query.status.loading = true;
 
-        res.json({tweets});
-      });
+      return cache.saveStatus(query.username, query.status)
+      .then(() => twitter.getUserTimeline(credentials, query.username))
+      .then(timeline => returnTimeline(query, res, timeline));
     }
   })
   .catch(error => {

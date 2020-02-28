@@ -32,7 +32,8 @@ describe("Timelines", () => {
       json: simple.stub()
     }
 
-    simple.mock(cache, "getStatusFor").resolveWith({loading: false})
+    simple.mock(cache, "getStatusFor").resolveWith({loading: false});
+    simple.mock(cache, "saveStatus").resolveWith();
     simple.mock(oauthTokenProvider, "getCredentials").resolveWith({});
   });
 
