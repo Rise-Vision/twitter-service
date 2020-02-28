@@ -65,6 +65,7 @@ const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credential
 
 const saveLoadingFlag = (query, loading) => {
   query.status.loading = loading;
+  query.status.loadingStarted = loading ? currentTimestamp() : null;
 
   return cache.saveStatus(query.username, { ...query.status });
 }

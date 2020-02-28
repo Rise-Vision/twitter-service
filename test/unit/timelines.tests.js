@@ -171,10 +171,12 @@ describe("Timelines", () => {
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
       });
     });
 
@@ -196,10 +198,12 @@ describe("Timelines", () => {
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
       });
     });
 
@@ -241,10 +245,12 @@ describe("Timelines", () => {
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
       });
     });
 
