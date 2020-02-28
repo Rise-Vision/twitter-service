@@ -7,10 +7,8 @@ const app = express();
 const server = http.createServer(app);
 const headers = require("./middleware/headers");
 const podname = process.env.podname;
-const redis = require("redis-promise");
+const redisCache = require("./redis-cache")
 const redisOTP = require("./redis-otp/datastore");
-const gkeHostname = "ts-redis-master";
-const redisHost = process.env.NODE_ENV === "test" ? "127.0.0.1" : gkeHostname;
 const credentials = require("./credentials");
 const timelines = require("./timelines");
 
@@ -34,14 +32,14 @@ const start = ()=>{
 
     console.log(`server is listening on ${port}`);
 
-    redis.initdb(null, redisHost);
+    redisCache.initdb(null);
     redisOTP.initdb(null);
   })
 };
 
 const stop = ()=>{
+  redisCache.close();
   redisOTP.close();
-  redis.close();
   server.close();
 };
 
