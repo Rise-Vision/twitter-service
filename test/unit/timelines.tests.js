@@ -23,7 +23,7 @@ describe("Timelines", () => {
     req = {
       query: {
         companyId: "test",
-        username: "RiseVision"
+        username: "risevision"
       }
     };
     res = {
@@ -144,6 +144,8 @@ describe("Timelines", () => {
 
         assert(res.send.called);
         assert.equal(res.send.lastCall.args[0], CONFLICT_ERROR_MESSAGE);
+
+        assert(!cache.saveStatus.called);
       });
     });
 
@@ -159,6 +161,16 @@ describe("Timelines", () => {
 
         assert(res.send.called);
         assert.equal(res.send.lastCall.args[0], "Network error.");
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
       });
     });
 
@@ -174,6 +186,16 @@ describe("Timelines", () => {
 
         assert(!res.status.called);
         assert(!res.send.called);
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
       });
     });
 
