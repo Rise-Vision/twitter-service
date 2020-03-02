@@ -38,11 +38,12 @@ const handleVerifyCredentialsRequest = (req, res) => {
 
       handleError(res, error, "Error when verifying credentials");
     });
-}
+};
 
 const isExpectedError = err => {
-  return err.message && (err.message.includes("No credentials for") || err.message === "Invalid or expired token.");
-}
+  return (err.message && err.message.includes("No credentials for")) ||
+    twitter.isInvalidOrExpiredTokenError(err);
+};
 
 module.exports = {
   handleVerifyCredentialsRequest
