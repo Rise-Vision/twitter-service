@@ -76,6 +76,14 @@ const returnTimeline = (query, res, timeline) => {
   res.json({tweets});
 };
 
+const handleTwitterApiCallError = (res, error) => {
+  if(twitter.isInvalidOrExpiredTokenError(error)) {
+    return logAndSendError(res, error, FORBIDDEN_ERROR);
+  }
+
+  logAndSendError(res, error, SERVER_ERROR);
+};
+
 const requestRemoteUserTimeline = (query, res, credentials) => {
   return saveLoadingFlag(query, true)
   .then(() => {
@@ -86,7 +94,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
     })
     .catch(error => {
       return saveLoadingFlag(query, false)
-      .then(() => logAndSendError(res, error, SERVER_ERROR));
+      .then(() => handleTwitterApiCallError(res, error));
     });
   });
 };
