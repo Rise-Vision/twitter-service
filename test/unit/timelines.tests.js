@@ -247,6 +247,33 @@ describe("Timelines", () => {
       });
     });
 
+    it("should send forbidden error if Twitter API returns invalid token", () => {
+      simple.mock(twitter, "getUserTimeline").rejectWith(new Error("Invalid or expired token."));
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], FORBIDDEN_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Invalid or expired token.");
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+      });
+    });
+
     it("should return tweets if Twitter API call is successful", () => {
       simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
 

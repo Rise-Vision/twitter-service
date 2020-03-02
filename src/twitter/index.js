@@ -42,7 +42,13 @@ const invokeEndpoint = (clientCredentials, endpoint, args) => {
     });
 };
 
+
+const isInvalidOrExpiredTokenError = error => {
+  return error.message && error.message === "Invalid or expired token.";
+};
+
 module.exports = {
+  isInvalidOrExpiredTokenError,
   getUserTimeline,
   verifyCredentials
 };

@@ -9,6 +9,30 @@ describe("Twitter", () => {
     simple.restore();
   });
 
+  describe("isInvalidOrExpiredTokenError", () => {
+    it("should recognize invalid or expired token error", () => {
+      const result = twitter.isInvalidOrExpiredTokenError({
+        message: "Invalid or expired token."
+      });
+
+      assert(result);
+    });
+
+    it("should not recognize invalid or expired token error on other message string", () => {
+      const result = twitter.isInvalidOrExpiredTokenError({
+        message: "Another error."
+      });
+
+      assert(!result);
+    });
+
+    it("should not recognize invalid or expired token error when there is no message string", () => {
+      const result = twitter.isInvalidOrExpiredTokenError({});
+
+      assert(!result);
+    });
+  });
+
   describe("verifyCredentials", () => {
     it("should resolve to true on successful invocation", (done) => {
       simple.mock(Twitter.prototype, "get").resolveWith({});
