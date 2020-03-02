@@ -82,7 +82,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
   });
 };
 
-const getUserTimeline = (query, res, credentials) => {
+const getTweets = (query, res, credentials) => {
   return cache.getStatusFor(query.username)
   .then(status => {
     query.status = status || {};
@@ -100,7 +100,7 @@ const handleGetTweetsRequest = (req, res) => {
   .then(query => {
     return oauthTokenProvider.getCredentials(req)
     .then(credentials => {
-      return getUserTimeline(query, res, credentials)
+      return getTweets(query, res, credentials)
       .catch(error => logAndSendError(res, error, SERVER_ERROR));
     })
     .catch(error => logAndSendError(res, error, FORBIDDEN_ERROR));
