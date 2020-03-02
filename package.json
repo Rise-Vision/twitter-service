@@ -35,6 +35,6 @@
     "express": "^4.17.1",
     "redis": "^3.0.2",
     "redis-promise": "git+https://github.com/Rise-Vision/redis-promise.git#1.1.2",
-    "twitter": "^1.7.1"
+    "twitter-lite": "^0.8.0"
   }
 }

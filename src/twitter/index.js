@@ -1,5 +1,5 @@
 const config = require('../config');
-const Twitter = require('twitter');
+const Twitter = require('twitter-lite');
 const TwitterCredentials = require('./twitter-app-credentials');
 
 const consumerKey = TwitterCredentials.consumer_key;

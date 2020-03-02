@@ -1,7 +1,7 @@
 const assert = require("assert");
 const simple = require("simple-mock");
 
-const Twitter = require('twitter');
+const Twitter = require('twitter-lite');
 const twitter = require("../../src/twitter");
 
 describe("Twitter", () => {
