@@ -1,7 +1,8 @@
 const assert = require("assert");
 const simple = require("simple-mock");
 
-const db = require("../../src/redis-otp/api");
+const cache = require('../../src/redis-cache/api');
+const oauthTokenProvider = require("../../src/redis-otp/api");
 const constants = require("../../src/constants");
 const timelines = require("../../src/timelines");
 const twitter = require("../../src/twitter");
@@ -9,7 +10,10 @@ const twitter = require("../../src/twitter");
 const sample2Tweets = require("./samples/tweets-2").data;
 const sample30Tweets = require("./samples/tweets-30").data;
 
-const { BAD_REQUEST_ERROR, FORBIDDEN_ERROR, SERVER_ERROR } = constants;
+const {
+  BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
+  SERVER_ERROR
+} = constants;
 
 describe("Timelines", () => {
   let req = null;
@@ -19,7 +23,7 @@ describe("Timelines", () => {
     req = {
       query: {
         companyId: "test",
-        username: "RiseVision"
+        username: "risevision"
       }
     };
     res = {
@@ -28,7 +32,9 @@ describe("Timelines", () => {
       json: simple.stub()
     }
 
-    simple.mock(db, "getCredentials").resolveWith({});
+    simple.mock(cache, "getStatusFor").resolveWith({loading: false});
+    simple.mock(cache, "saveStatus").resolveWith();
+    simple.mock(oauthTokenProvider, "getCredentials").resolveWith({});
   });
 
   afterEach(() => {
@@ -112,7 +118,7 @@ describe("Timelines", () => {
     });
 
     it("should reject if credentials do not exist", () => {
-      simple.mock(db, "getCredentials").rejectWith(new Error("No credentials for"));
+      simple.mock(oauthTokenProvider, "getCredentials").rejectWith(new Error("No credentials for"));
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
@@ -123,6 +129,23 @@ describe("Timelines", () => {
 
         assert(res.send.called);
         assert.equal(res.send.lastCall.args[0], "No credentials for");
+      });
+    });
+
+    it("should reject if the loading flag is set", () => {
+      simple.mock(cache, "getStatusFor").resolveWith({loading: true});
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], CONFLICT_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], CONFLICT_ERROR_MESSAGE);
+
+        assert(!cache.saveStatus.called);
       });
     });
 
@@ -138,11 +161,47 @@ describe("Timelines", () => {
 
         assert(res.send.called);
         assert.equal(res.send.lastCall.args[0], "Network error.");
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
       });
     });
 
     it("should return tweets if Twitter API call is successful", () => {
       simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+        assert.deepEqual(res.json.lastCall.args[0], {
+          tweets: sample2Tweets
+        });
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
+      });
+    });
+
+    it("should return tweets even if there's no username status stored", () => {
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(cache, "getStatusFor").resolveWith(null);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {

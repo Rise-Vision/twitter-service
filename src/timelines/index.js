@@ -1,9 +1,13 @@
 const config = require('../config');
 const constants = require('../constants');
+const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
 
-const { BAD_REQUEST_ERROR, FORBIDDEN_ERROR, SERVER_ERROR } = constants;
+const {
+  BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
+  SERVER_ERROR
+} = constants;
 
 const validationErrorFor = message => Promise.reject(new Error(message));
 
@@ -34,30 +38,71 @@ const validateQueryParams = (req) => {
   });
 };
 
+const sendError = (res, message, status) => {
+  res.status(status);
+  res.send(message);
+};
+
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
-  res.status(status);
-  res.send(error.message);
+  sendError(res, error.message, status);
 };
 
-const getUserTimeline = (query, res, credentials) => {
-  return twitter.getUserTimeline(credentials, query.username)
-  .then(timeline => {
-    const tweets = timeline.slice(0, query.count);
+const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
+  // TODO check cached entries in other card and check loading flag age in next PR
 
-    res.json({tweets});
-  })
-  .catch(error => {
-    logAndSendError(res, error, SERVER_ERROR);
+  sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
+};
+
+const saveLoadingFlag = (query, loading) => {
+  query.status.loading = loading;
+
+  return cache.saveStatus(query.username, { ...query.status });
+}
+
+const returnTimeline = (query, res, timeline) => {
+  const tweets = timeline.slice(0, query.count);
+
+  res.json({tweets});
+};
+
+const requestRemoteUserTimeline = (query, res, credentials) => {
+  return saveLoadingFlag(query, true)
+  .then(() => {
+    return twitter.getUserTimeline(credentials, query.username)
+    .then(timeline => {
+      return saveLoadingFlag(query, false)
+      .then(() => returnTimeline(query, res, timeline));
+    })
+    .catch(error => {
+      return saveLoadingFlag(query, false)
+      .then(() => logAndSendError(res, error, SERVER_ERROR));
+    });
   });
+};
+
+const getTweets = (query, res, credentials) => {
+  return cache.getStatusFor(query.username)
+  .then(status => {
+    query.status = status || {};
+
+    if(status && status.loading) {
+      return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
+    } else {
+      return requestRemoteUserTimeline(query, res, credentials);
+    }
+  })
 };
 
 const handleGetTweetsRequest = (req, res) => {
   return validateQueryParams(req)
   .then(query => {
     return oauthTokenProvider.getCredentials(req)
-    .then(credentials => getUserTimeline(query, res, credentials))
+    .then(credentials => {
+      return getTweets(query, res, credentials)
+      .catch(error => logAndSendError(res, error, SERVER_ERROR));
+    })
     .catch(error => logAndSendError(res, error, FORBIDDEN_ERROR));
   })
   .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
