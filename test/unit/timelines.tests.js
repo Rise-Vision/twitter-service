@@ -254,6 +254,36 @@ describe("Timelines", () => {
       });
     });
 
+    it("should return tweets if loading is turned on but loadingStarted is not defined", () => {
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(cache, "getStatusFor").resolveWith({
+        loading: true
+      });
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+        assert.deepEqual(res.json.lastCall.args[0], {
+          tweets: sample2Tweets
+        });
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+
+        assert.equal(cache.saveStatus.callCount, 2);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+      });
+    });
+
     it("should return 25 tweets by default", () => {
       simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
 

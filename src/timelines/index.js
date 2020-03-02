@@ -52,7 +52,7 @@ const logAndSendError = (res, error, status) => {
 };
 
 const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
-  const elapsed = currentTimestamp() - query.status.loadingStarted;
+  const elapsed = currentTimestamp() - ( query.status.loadingStarted || 0 );
 
   if(elapsed > config.loadingFlagTimeoutInMillis) {
     return requestRemoteUserTimeline(query, res, credentials);
