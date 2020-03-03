@@ -284,6 +284,9 @@ describe("Timelines", () => {
           tweets: sample2Tweets
         });
 
+        assert(twitter.getUserTimeline.called);
+        assert.equal(twitter.getUserTimeline.lastCall.args[1], "risevision");
+
         assert(!res.status.called);
         assert(!res.send.called);
 
@@ -314,8 +317,31 @@ describe("Timelines", () => {
 
         assert(!res.status.called);
         assert(!res.send.called);
+
+        assert(twitter.getUserTimeline.called);
+        assert.equal(twitter.getUserTimeline.lastCall.args[1], "risevision");
       });
     });
+
+    it("should transform username to lowercase", () => {
+      req.query.username = "UPPERCASE";
+      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(res.json.called);
+
+        assert(twitter.getUserTimeline.called);
+        assert.equal(twitter.getUserTimeline.lastCall.args[1], "uppercase");
+
+        assert(!res.status.called);
+        assert(!res.send.called);
+
+        assert.equal(cache.saveStatus.calls[0].args[0], "uppercase");
+        assert.equal(cache.saveStatus.calls[1].args[0], "uppercase");
+      });
+    });
+
   });
 
   describe("handleGetTweetsRequest / Limit output", () => {
