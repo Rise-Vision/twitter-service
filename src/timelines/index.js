@@ -36,6 +36,7 @@ const validateQueryParams = (req) => {
 
   return Promise.resolve({
     ...req.query,
+    username: username.toLowerCase(),
     count: countNumber
   });
 };
