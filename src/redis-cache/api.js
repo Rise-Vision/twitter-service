@@ -1,8 +1,8 @@
 const redis = require("redis-promise");
 
-const statusKeyFor = username => `${ username }:status`;
+const statusKeyFor = username => `${username}:status`;
 
-const parseJSON = value => value ? JSON.parse(value) : null;
+const parseJSON = (value) => {return value ? JSON.parse(value) : null};
 
 const getStatusFor = username => {
   return redis.getString(statusKeyFor(username))
