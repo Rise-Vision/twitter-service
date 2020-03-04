@@ -1,3 +1,5 @@
+/* eslint-disable no-magic-numbers */
+
 module.exports = {
   data: [
     {
@@ -84,7 +86,7 @@ module.exports = {
         "favourites_count": 1290,
         "statuses_count": 371523,
         "profile_image_url": "http://pbs.twimg.com/profile_images/1145679135873933312/OF0s1_Pe_normal.png",
-        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1145679135873933312/OF0s1_Pe_normal.png",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/1145679135873933312/OF0s1_Pe_normal.png"
       },
       "is_quote_status": false,
       "retweet_count": 2,
