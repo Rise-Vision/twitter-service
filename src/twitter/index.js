@@ -4,7 +4,7 @@ const TwitterCredentials = require('./twitter-app-credentials');
 
 const consumerKey = TwitterCredentials.consumer_key;
 const consumerSecret = TwitterCredentials.consumer_secret;
-const { numberOfCachedTweets } = config
+const {numberOfCachedTweets} = config
 
 const createInstance = (clientCredentials) => {
   const client = new Twitter({

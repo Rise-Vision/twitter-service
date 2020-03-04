@@ -1,3 +1,5 @@
+/* eslint-disable max-statements, no-warning-comments */
+
 const config = require('../config');
 const constants = require('../constants');
 const cache = require('../redis-cache/api');
@@ -24,13 +26,13 @@ const validateQueryParams = (req) => {
     return validationErrorFor("Username was not provided");
   }
 
-  if (count && !/^\d+$/.test(count)) {
+  if (count && !(/^\d+$/).test(count)) {
     return validationErrorFor(`'count' is not a valid integer value: ${count}`);
   }
 
   const countNumber = count ? Number(count) : config.defaultTweetCount;
 
-  if(countNumber < 1 || countNumber > config.numberOfCachedTweets) {
+  if (countNumber < 1 || countNumber > config.numberOfCachedTweets) {
     return validationErrorFor(`'count' is out of range: ${countNumber}`);
   }
 
@@ -53,9 +55,9 @@ const logAndSendError = (res, error, status) => {
 };
 
 const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
-  const elapsed = currentTimestamp() - ( query.status.loadingStarted || 0 );
+  const elapsed = currentTimestamp() - (query.status.loadingStarted || 0);
 
-  if(elapsed > config.loadingFlagTimeoutInMillis) {
+  if (elapsed > config.loadingFlagTimeoutInMillis) {
     return requestRemoteUserTimeline(query, res, credentials);
   }
 
@@ -68,7 +70,7 @@ const saveLoadingFlag = (query, loading) => {
   query.status.loading = loading;
   query.status.loadingStarted = loading ? currentTimestamp() : null;
 
-  return cache.saveStatus(query.username, { ...query.status });
+  return cache.saveStatus(query.username, {...query.status});
 }
 
 const returnTimeline = (query, res, timeline) => {
@@ -78,7 +80,7 @@ const returnTimeline = (query, res, timeline) => {
 };
 
 const handleTwitterApiCallError = (res, error) => {
-  if(twitter.isInvalidOrExpiredTokenError(error)) {
+  if (twitter.isInvalidOrExpiredTokenError(error)) {
     return logAndSendError(res, error, FORBIDDEN_ERROR);
   }
 
@@ -105,11 +107,11 @@ const getTweets = (query, res, credentials) => {
   .then(status => {
     query.status = status || {};
 
-    if(status && status.loading) {
+    if (status && status.loading) {
       return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
-    } else {
-      return requestRemoteUserTimeline(query, res, credentials);
     }
+      return requestRemoteUserTimeline(query, res, credentials);
+
   })
 };
 

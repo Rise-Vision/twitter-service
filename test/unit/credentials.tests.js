@@ -6,7 +6,7 @@ const credentials = require("../../src/credentials");
 const db = require("../../src/redis-otp/api");
 const twitter = require("../../src/twitter");
 
-const { BAD_REQUEST_ERROR, SERVER_ERROR } = constants;
+const {BAD_REQUEST_ERROR, SERVER_ERROR} = constants;
 
 describe("Credentials", () => {
   let req = null;

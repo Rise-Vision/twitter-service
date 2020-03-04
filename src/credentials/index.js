@@ -4,7 +4,7 @@ const twitter = require('../twitter');
 
 const invalidInputError = new Error("Invalid input");
 
-const { BAD_REQUEST_ERROR, SERVER_ERROR } = constants;
+const {BAD_REQUEST_ERROR, SERVER_ERROR} = constants;
 
 const validateQueryParams = (req) => {
   const {companyId} = req.query;
@@ -41,7 +41,7 @@ const handleVerifyCredentialsRequest = (req, res) => {
 };
 
 const isExpectedError = err => {
-  return (err.message && err.message.includes("No credentials for")) ||
+  return (err.message && err.message.includes("No credentials for")) || // eslint-disable-line no-extra-parens
     twitter.isInvalidOrExpiredTokenError(err);
 };
 

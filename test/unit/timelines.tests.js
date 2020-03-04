@@ -1,3 +1,5 @@
+/* eslint-disable max-lines, no-magic-numbers, max-statements */
+
 const assert = require("assert");
 const simple = require("simple-mock");
 
