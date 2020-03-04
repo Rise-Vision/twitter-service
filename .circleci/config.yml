@@ -13,7 +13,7 @@ jobs:
           key: node-cache-{{ checksum "package.json" }}
           paths:
             - ./node_modules
-      - run: echo RUN TESTS
+      - run: npm test
 
   build-image:
     docker: *DOCKERIMAGE
