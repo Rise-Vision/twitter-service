@@ -89,6 +89,7 @@ describe("Timelines Data Formatting", () => {
       assert.equal(formatted[0].profilePicture, sampleTweets[0].user.profile_image_url_https);
       assert.equal(formatted[0].createdAt, sampleTweets[0].created_at);
       assert.equal(formatted[0].text, sampleTweets[0].full_text);
+      assert.deepEqual(formatted[0].images, ["https://pbs.twimg.com/media/ERpd155WAAIbGuw?format=jpg&name=large"]);
     });
 
     it("should nullify root values when timeline missing required fields", () => {
@@ -120,6 +121,63 @@ describe("Timelines Data Formatting", () => {
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
       assert(formatted[0].text === text);
+    });
+
+    it("should return an empty array for 'images' if required fields missing", () => {
+      // test for missing "extended_entities"
+      let modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+
+      Reflect.deleteProperty(modifiedSampleTweets[0], "extended_entities");
+
+      let formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
+      // test for missing "media"
+      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+
+      Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities, "media");
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
+      // test for invalid "media"
+      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+
+      Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities, "media");
+      modifiedSampleTweets[0].extended_entities.media = "test";
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
+      // test for missing "type"
+      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+
+      Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities.media[0], "type");
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
+      // test for invalid "type"
+      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets[0].extended_entities.media[0].type = "test";
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
+      // test for missing "media_url_https"
+      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+
+      Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities.media[0], "media_url_https");
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert.deepEqual(formatted[0].images, []);
+
     });
   });
 });
