@@ -6,7 +6,7 @@ module.exports = {
       "created_at": "Tue Feb 25 20:23:02 +0000 2020",
       "id": 1,
       "id_str": "1",
-      "text": "Example with image(s)",
+      "full_text": "Example with image(s)",
       "truncated": false,
       "extended_entities": {
         "media": [
@@ -71,7 +71,7 @@ module.exports = {
       "created_at": "Tue Feb 25 20:19:06 +0000 2020",
       "id": 2,
       "id_str": "2",
-      "text": "Example without images",
+      "full_text": "Example without images",
       "truncated": false,
       "user": {
         "id": 987,
