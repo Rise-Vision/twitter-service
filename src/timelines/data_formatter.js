@@ -17,6 +17,18 @@ const getUserFields = (tweet) => {
   };
 };
 
+const getTextField = (tweet) => {
+  if ("full_text" in tweet) {
+    return tweet.full_text;
+  }
+
+  if ("text" in tweet) {
+    return tweet.text;
+  }
+
+  return null;
+};
+
 const getRootFields = (tweet) => {
   const userFields = {};
 
@@ -30,10 +42,11 @@ const getRootFields = (tweet) => {
     userFields.profilePicture = null;
   }
 
-  // TODO: text, image, and quoted fields
+  // TODO: image, and quoted fields
 
   return Object.assign({}, userFields, {
-    createdAt: "created_at" in tweet ? tweet.created_at : null
+    createdAt: "created_at" in tweet ? tweet.created_at : null,
+    text: getTextField(tweet)
   })
 };
 

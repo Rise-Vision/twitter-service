@@ -1,3 +1,5 @@
+/* eslint-disable max-statements */
+
 const assert = require("assert");
 const simple = require("simple-mock");
 
@@ -86,6 +88,7 @@ describe("Timelines Data Formatting", () => {
       assert.equal(formatted[0].screenName, sampleTweets[0].user.screen_name);
       assert.equal(formatted[0].profilePicture, sampleTweets[0].user.profile_image_url_https);
       assert.equal(formatted[0].createdAt, sampleTweets[0].created_at);
+      assert.equal(formatted[0].text, sampleTweets[0].full_text);
     });
 
     it("should nullify root values when timeline missing required fields", () => {
@@ -95,6 +98,7 @@ describe("Timelines Data Formatting", () => {
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "screen_name");
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "profile_image_url_https");
       Reflect.deleteProperty(modifiedSampleTweets[0], "created_at");
+      Reflect.deleteProperty(modifiedSampleTweets[0], "full_text");
 
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
@@ -102,6 +106,20 @@ describe("Timelines Data Formatting", () => {
       assert(formatted[0].screenName === null);
       assert(formatted[0].profilePicture === null);
       assert(formatted[0].createdAt === null);
+      assert(formatted[0].text === null);
+    });
+
+    it("should fallback on 'text' if 'full_text' not present", () => {
+      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets)),
+        text = "Testing fallback on text";
+
+      Reflect.deleteProperty(modifiedSampleTweets[0], "full_text");
+
+      modifiedSampleTweets[0].text = text;
+
+      const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[0].text === text);
     });
   });
 });
