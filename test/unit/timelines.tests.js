@@ -8,10 +8,13 @@ const oauthTokenProvider = require("../../src/redis-otp/api");
 const config = require("../../src/config");
 const constants = require("../../src/constants");
 const timelines = require("../../src/timelines");
+const formatter = require("../../src/timelines/data_formatter");
 const twitter = require("../../src/twitter");
 
-const sample2Tweets = require("./samples/tweets-2").data;
 const sample30Tweets = require("./samples/tweets-30").data;
+const sampleTweets = require("./samples/tweets-timeline").data;
+
+const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
@@ -160,7 +163,7 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but it has expired", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true,
         loadingStarted: new Date().getTime() - config.loadingFlagTimeoutInMillis - 1
@@ -170,7 +173,7 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sample2Tweets
+          tweets: sampleTweetsFormatted
         });
 
         assert(!res.status.called);
@@ -191,7 +194,7 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but loadingStarted is not defined", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true
       });
@@ -200,7 +203,7 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sample2Tweets
+          tweets: sampleTweetsFormatted
         });
 
         assert(!res.status.called);
@@ -277,13 +280,13 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if Twitter API call is successful", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sample2Tweets
+          tweets: sampleTweetsFormatted
         });
 
         assert(twitter.getUserTimeline.called);
@@ -307,14 +310,14 @@ describe("Timelines", () => {
     });
 
     it("should return tweets even if there's no username status stored", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
       simple.mock(cache, "getStatusFor").resolveWith(null);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sample2Tweets
+          tweets: sampleTweetsFormatted
         });
 
         assert(!res.status.called);
@@ -327,7 +330,7 @@ describe("Timelines", () => {
 
     it("should transform username to lowercase", () => {
       req.query.username = "UPPERCASE";
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
