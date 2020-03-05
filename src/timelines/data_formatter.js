@@ -34,6 +34,16 @@ const getImagesField = (tweet) => {
   return images.filter(url => url !== "");
 };
 
+const getQuotedField = (tweet) => {
+  if (!("is_quote_status" in tweet)) {return null;}
+
+  if (!tweet.is_quote_status) {return null;}
+
+  if (!("quoted_status" in tweet)) {return null;}
+
+  return getTweetFormatted(tweet.quoted_status, false);
+};
+
 const getStatisticsFields = (tweet) => {
   return {
     retweetCount: "retweet_count" in tweet ? tweet.retweet_count : null,
@@ -76,8 +86,6 @@ const getRootFields = (tweet) => {
     userFields.profilePicture = null;
   }
 
-  // TODO: image, and quoted fields
-
   return Object.assign({}, userFields, {
     createdAt: "created_at" in tweet ? tweet.created_at : null,
     text: getTextField(tweet),
@@ -85,11 +93,12 @@ const getRootFields = (tweet) => {
   })
 };
 
-const getTweetFormatted = (tweet) => {
+const getTweetFormatted = (tweet, includeQuoted = true) => {
   const subFields = {};
 
   subFields.user = getUserFields(tweet);
   subFields.statistics = getStatisticsFields(tweet);
+  subFields.quoted = includeQuoted ? getQuotedField(tweet) : null;
 
   return Object.assign({}, getRootFields(tweet), subFields);
 };

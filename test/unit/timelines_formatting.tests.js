@@ -1,4 +1,4 @@
-/* eslint-disable max-statements */
+/* eslint-disable max-statements, no-magic-numbers */
 
 const assert = require("assert");
 const simple = require("simple-mock");
@@ -180,5 +180,61 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
     });
+  });
+
+  describe("getTimelineFormatted / quoted", () => {
+    it("should populate quoted object", () => {
+      const formatted = timelineFormatter.getTimelineFormatted(sampleTweets);
+
+      assert.deepEqual(formatted[2].quoted.user, {
+        description: sampleTweets[2].quoted_status.user.description,
+        statuses: sampleTweets[2].quoted_status.user.statuses_count,
+        followers: sampleTweets[2].quoted_status.user.followers_count
+      });
+
+      assert.deepEqual(formatted[2].quoted.statistics, {
+        retweetCount: sampleTweets[2].quoted_status.retweet_count,
+        likeCount: sampleTweets[2].quoted_status.favorite_count
+      });
+
+      assert.equal(formatted[2].quoted.name, sampleTweets[2].quoted_status.user.name);
+      assert.equal(formatted[2].quoted.screenName, sampleTweets[2].quoted_status.user.screen_name);
+      assert.equal(formatted[2].quoted.profilePicture, sampleTweets[2].quoted_status.user.profile_image_url_https);
+      assert.equal(formatted[2].quoted.createdAt, sampleTweets[2].quoted_status.created_at);
+      assert.equal(formatted[2].quoted.text, sampleTweets[2].quoted_status.full_text);
+      assert.deepEqual(formatted[2].images, []);
+
+      assert(formatted[2].quoted.quoted === null);
+    });
+
+    it("should nullify 'quoted' if required fields missing", () => {
+      // test for missing "is_quote_status"
+      let modifiedSampleTweets = utils.deepClone(sampleTweets);
+
+      Reflect.deleteProperty(modifiedSampleTweets[2], "is_quote_status");
+
+      let formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[2].quoted === null);
+
+      // test for quote_status equal to false
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
+
+      modifiedSampleTweets[2].is_quote_status = false;
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[2].quoted === null);
+
+      // test for missing "quoted_status"
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
+
+      Reflect.deleteProperty(modifiedSampleTweets[2], "quoted_status");
+
+      formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[2].quoted === null);
+    });
+
   });
 });
