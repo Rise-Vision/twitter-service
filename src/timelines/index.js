@@ -5,6 +5,7 @@ const constants = require('../constants');
 const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
+const formatter = require('./data_formatter');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
@@ -92,8 +93,10 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
   .then(() => {
     return twitter.getUserTimeline(credentials, query.username)
     .then(timeline => {
+      const formattedTimeline = formatter.getTimelineFormatted(timeline);
+
       return saveLoadingFlag(query, false)
-      .then(() => returnTimeline(query, res, timeline));
+      .then(() => returnTimeline(query, res, formattedTimeline));
     })
     .catch(error => {
       return saveLoadingFlag(query, false)
