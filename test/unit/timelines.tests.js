@@ -11,7 +11,6 @@ const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
 const twitter = require("../../src/twitter");
 
-const sample2Tweets = require("./samples/tweets-2").data;
 const sample30Tweets = require("./samples/tweets-30").data;
 const sampleTweets = require("./samples/tweets-timeline").data;
 
@@ -331,7 +330,7 @@ describe("Timelines", () => {
 
     it("should transform username to lowercase", () => {
       req.query.username = "UPPERCASE";
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample2Tweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
