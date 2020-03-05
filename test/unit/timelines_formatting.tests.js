@@ -2,6 +2,7 @@
 
 const assert = require("assert");
 const simple = require("simple-mock");
+const utils = require("../../src/utils");
 
 const timelineFormatter = require("../../src/timelines/data_formatter");
 
@@ -28,7 +29,7 @@ describe("Timelines Data Formatting", () => {
     });
 
     it("should nullify statistics values when timeline missing required fields", () => {
-      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      const modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0], "retweet_count");
       Reflect.deleteProperty(modifiedSampleTweets[0], "favorite_count");
@@ -54,7 +55,7 @@ describe("Timelines Data Formatting", () => {
     });
 
     it("should nullify user values when timeline missing required user fields", () => {
-      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      const modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "description");
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "statuses_count");
@@ -70,7 +71,7 @@ describe("Timelines Data Formatting", () => {
     });
 
     it("should populate empty object for user when required user field missing", () => {
-      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      const modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0], "user");
 
@@ -93,7 +94,7 @@ describe("Timelines Data Formatting", () => {
     });
 
     it("should nullify root values when timeline missing required fields", () => {
-      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      const modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "name");
       Reflect.deleteProperty(modifiedSampleTweets[0].user, "screen_name");
@@ -111,7 +112,7 @@ describe("Timelines Data Formatting", () => {
     });
 
     it("should fallback on 'text' if 'full_text' not present", () => {
-      const modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets)),
+      const modifiedSampleTweets = utils.deepClone(sampleTweets),
         text = "Testing fallback on text";
 
       Reflect.deleteProperty(modifiedSampleTweets[0], "full_text");
@@ -125,7 +126,7 @@ describe("Timelines Data Formatting", () => {
 
     it("should return an empty array for 'images' if required fields missing", () => {
       // test for missing "extended_entities"
-      let modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      let modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0], "extended_entities");
 
@@ -134,7 +135,7 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
       // test for missing "media"
-      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities, "media");
 
@@ -143,7 +144,7 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
       // test for invalid "media"
-      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities, "media");
       modifiedSampleTweets[0].extended_entities.media = "test";
@@ -153,7 +154,7 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
       // test for missing "type"
-      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities.media[0], "type");
 
@@ -162,7 +163,7 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
       // test for invalid "type"
-      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
       modifiedSampleTweets[0].extended_entities.media[0].type = "test";
 
       formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
@@ -170,7 +171,7 @@ describe("Timelines Data Formatting", () => {
       assert.deepEqual(formatted[0].images, []);
 
       // test for missing "media_url_https"
-      modifiedSampleTweets = JSON.parse(JSON.stringify(sampleTweets));
+      modifiedSampleTweets = utils.deepClone(sampleTweets);
 
       Reflect.deleteProperty(modifiedSampleTweets[0].extended_entities.media[0], "media_url_https");
 

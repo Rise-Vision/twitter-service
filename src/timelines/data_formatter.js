@@ -1,6 +1,7 @@
 /* eslint-disable no-warning-comments */
 
 const constants = require('../constants');
+const utils = require('../utils');
 const allowedMediaTypes = [constants.MEDIA_TYPE_IMAGE, constants.MEDIA_TYPE_ANIMATED_GIF];
 
 const isExpectedMediaFormat = (tweet) => {
@@ -28,7 +29,7 @@ const getFormattedImageURL = (imageItem) => {
 const getImagesField = (tweet) => {
   if (!isExpectedMediaFormat(tweet)) {return []}
 
-  const images = tweet.extended_entities.media.map(imageItem => getFormattedImageURL(JSON.parse(JSON.stringify(imageItem))));
+  const images = tweet.extended_entities.media.map(imageItem => getFormattedImageURL(utils.deepClone(imageItem)));
 
   return images.filter(url => url !== "");
 };
@@ -98,7 +99,7 @@ const getTimelineFormatted = (timeline) => {
     return [];
   }
 
-  return timeline.map(tweet => getTweetFormatted(JSON.parse(JSON.stringify(tweet))));
+  return timeline.map(tweet => getTweetFormatted(utils.deepClone(tweet)));
 };
 
 module.exports = {
