@@ -18,7 +18,7 @@ const saveStatus = (username, status) => {
 };
 
 const saveTweets = (username, tweets) => {
-  if(!tweets || tweets.length == 0) {
+  if (!tweets || tweets.length === 0) {
     return Promise.resolve();
   }
 
