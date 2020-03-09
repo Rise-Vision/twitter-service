@@ -93,7 +93,7 @@ const returnTimeline = (query, res, timeline) => {
 
   res.json({
     tweets,
-    cached: !!query.cached
+    cached: Boolean(query.cached)
   });
 };
 
