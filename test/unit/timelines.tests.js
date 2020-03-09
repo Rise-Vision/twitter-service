@@ -40,6 +40,7 @@ describe("Timelines", () => {
 
     simple.mock(cache, "getStatusFor").resolveWith({loading: false});
     simple.mock(cache, "saveStatus").resolveWith();
+    simple.mock(cache, "saveTweets").resolveWith();
     simple.mock(oauthTokenProvider, "getCredentials").resolveWith({});
   });
 
@@ -173,23 +174,35 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted
+          tweets: sampleTweetsFormatted,
+          cached: false
         });
 
         assert(!res.status.called);
         assert(!res.send.called);
 
-        assert.equal(cache.saveStatus.callCount, 2);
+        assert.equal(cache.saveStatus.callCount, 3);
 
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
         assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+        assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
+        assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(!cache.saveStatus.calls[1].args[1].loading);
-        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].loading);
+        assert(cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+        assert(!cache.saveStatus.calls[2].args[1].loading);
+        assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[2].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
       });
     });
 
@@ -203,23 +216,35 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted
+          tweets: sampleTweetsFormatted,
+          cached: false
         });
 
         assert(!res.status.called);
         assert(!res.send.called);
 
-        assert.equal(cache.saveStatus.callCount, 2);
+        assert.equal(cache.saveStatus.callCount, 3);
 
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
         assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+        assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
+        assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(!cache.saveStatus.calls[1].args[1].loading);
-        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].loading);
+        assert(cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+        assert(!cache.saveStatus.calls[2].args[1].loading);
+        assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[2].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
       });
     });
   });
@@ -286,7 +311,8 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted
+          tweets: sampleTweetsFormatted,
+          cached: false
         });
 
         assert(twitter.getUserTimeline.called);
@@ -295,17 +321,28 @@ describe("Timelines", () => {
         assert(!res.status.called);
         assert(!res.send.called);
 
-        assert.equal(cache.saveStatus.callCount, 2);
+        assert.equal(cache.saveStatus.callCount, 3);
 
         // Started loading
         assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
         assert(cache.saveStatus.calls[0].args[1].loading);
         assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+        assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
+        assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(!cache.saveStatus.calls[1].args[1].loading);
-        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].loading);
+        assert(cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[1].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+        assert(!cache.saveStatus.calls[2].args[1].loading);
+        assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[2].args[1].lastUpdated);
+        assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
       });
     });
 
@@ -317,7 +354,8 @@ describe("Timelines", () => {
       .then(() => {
         assert(res.json.called);
         assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted
+          tweets: sampleTweetsFormatted,
+          cached: false
         });
 
         assert(!res.status.called);
