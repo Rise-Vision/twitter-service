@@ -105,7 +105,7 @@ const handleTwitterApiCallError = (res, error) => {
   logAndSendError(res, error, SERVER_ERROR);
 };
 
-const hasCachedTweetsFor = (query) => {
+const tweetsCacheIsCurrentFor = (query) => {
   const lastUpdated = query.status.lastUpdated || 0;
   const elapsed = currentTimestamp() - lastUpdated;
 
@@ -147,7 +147,7 @@ const getTweets = (query, res, credentials) => {
 
     if (status && status.loading) {
       return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
-    } else if (hasCachedTweetsFor(query)) {
+    } else if (tweetsCacheIsCurrentFor(query)) {
       return returnTweetsFromCache(query, res);
     }
 
