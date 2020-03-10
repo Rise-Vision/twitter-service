@@ -115,6 +115,8 @@ const hasCachedTweetsFor = (query) => {
 const returnTweetsFromCache = (query, res) => {
   return cache.getTweetsFor(query.username, query.count)
   .then(tweets => {
+    query.cached = true;
+
     return returnTimeline(query, res, tweets);
   });
 };
