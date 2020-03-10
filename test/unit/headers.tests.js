@@ -29,11 +29,12 @@ describe("redis-cache/api", ()=>{
     it("should set CORS and HSTS headers", ()=>{
       headers.setHeaders(req, res, next);
 
-      assert.equal(res.header.callCount, 3);
+      assert.equal(res.header.callCount, 4);
 
       assert.deepEqual(res.header.calls[0].args, ["Access-Control-Allow-Origin", "http://localhost"]);
       assert.deepEqual(res.header.calls[1].args, ["Access-Control-Allow-Credentials", true]);
-      assert.deepEqual(res.header.calls[2].args, ["Strict-Transport-Security", "max-age=31536000"]);
+      assert.deepEqual(res.header.calls[2].args, ["Access-Control-Allow-Headers", "X-Requested-With"]);
+      assert.deepEqual(res.header.calls[3].args, ["Strict-Transport-Security", "max-age=31536000"]);
 
       assert(next.called);
     });

@@ -1,6 +1,7 @@
 const setCorsHeaders = (req, res) => {
   res.header("Access-Control-Allow-Origin", req.headers.origin);
   res.header("Access-Control-Allow-Credentials", true);
+  res.header("Access-Control-Allow-Headers", "X-Requested-With");
 };
 
 const setHstsHeader = (res) => {
