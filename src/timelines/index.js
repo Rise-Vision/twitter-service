@@ -105,6 +105,20 @@ const handleTwitterApiCallError = (res, error) => {
   logAndSendError(res, error, SERVER_ERROR);
 };
 
+const hasCachedTweetsFor = (query) => {
+  const lastUpdated = query.status.lastUpdated || 0;
+  const elapsed = currentTimestamp() - query.status.lastUpdated;
+
+  return elapsed <= config.cacheExpirationInMillis;
+};
+
+const returnTweetsFromCache = (query, res) => {
+  return cache.getTweetsFor(query.username, query.count)
+  .then(tweets => {
+    return returnTimeline(query, res, tweets);
+  });
+};
+
 const requestRemoteUserTimeline = (query, res, credentials) => {
   return saveLoadingFlag(query, true)
   .then(() => {
@@ -124,10 +138,6 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
   });
 };
 
-// const hasCachedTweetsFor = (query) => {
-//  return false;
-// }
-
 const getTweets = (query, res, credentials) => {
   return cache.getStatusFor(query.username)
   .then(status => {
@@ -135,7 +145,8 @@ const getTweets = (query, res, credentials) => {
 
     if (status && status.loading) {
       return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
-    // } else if (hasCachedTweetsFor(query)) {
+    } else if (hasCachedTweetsFor(query)) {
+      return returnTweetsFromCache(query, res);
     }
 
     return requestRemoteUserTimeline(query, res, credentials);

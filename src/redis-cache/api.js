@@ -17,6 +17,15 @@ const saveStatus = (username, status) => {
   return redis.setString(statusKeyFor(username), value);
 };
 
+const getTweetsFor = (username, count) => {
+  const key = tweetsKeyFor(username);
+
+  return redis.getListRange(key, 0, count - 1)
+  .then(tweets => {
+    return ( tweets || [] ).map(parseJSON);
+  });
+}
+
 const saveTweets = (username, tweets) => {
   if (!tweets || tweets.length === 0) {
     return Promise.resolve();
@@ -31,6 +40,7 @@ const saveTweets = (username, tweets) => {
 
 module.exports = {
   getStatusFor,
+  getTweetsFor,
   saveStatus,
   saveTweets
 };
