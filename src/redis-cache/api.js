@@ -22,7 +22,7 @@ const getTweetsFor = (username, count) => {
 
   return redis.getListRange(key, 0, count - 1)
   .then(tweets => {
-    return ( tweets || [] ).map(parseJSON);
+    return (tweets || []).map(parseJSON);
   });
 }
 

@@ -107,7 +107,7 @@ const handleTwitterApiCallError = (res, error) => {
 
 const hasCachedTweetsFor = (query) => {
   const lastUpdated = query.status.lastUpdated || 0;
-  const elapsed = currentTimestamp() - query.status.lastUpdated;
+  const elapsed = currentTimestamp() - lastUpdated;
 
   return elapsed <= config.cacheExpirationInMillis;
 };
