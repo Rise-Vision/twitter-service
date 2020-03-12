@@ -25,7 +25,7 @@ const verifyCredentials = credentials => {
 };
 
 const getUserTimeline = (credentials, query) => {
-  const { status, username } = query
+  const {status, username} = query
 
   const args = {
     screen_name: username,

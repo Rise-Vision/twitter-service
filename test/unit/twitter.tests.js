@@ -1,3 +1,5 @@
+/* eslint-disable init-declarations */
+
 const assert = require("assert");
 const simple = require("simple-mock");
 
@@ -66,7 +68,10 @@ describe("Twitter", () => {
     let query;
 
     beforeEach(() => {
-      query = { username: "risevision", status: {} };
+      query = {
+        username: "risevision",
+        status: {}
+      };
     });
 
     it("should request user timeline", () => {
