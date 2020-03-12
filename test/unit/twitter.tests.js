@@ -3,6 +3,9 @@ const simple = require("simple-mock");
 
 const Twitter = require('twitter');
 const twitter = require("../../src/twitter");
+const config = require("../../src/config");
+
+const sampleTweets = require("./samples/tweets-timeline").data;
 
 describe("Twitter", () => {
   afterEach(() => {
@@ -55,6 +58,49 @@ describe("Twitter", () => {
       .catch(response => {
         assert.equal(response, error);
         done();
+      });
+    });
+  });
+
+  describe("getUserTimeline", () => {
+    let query;
+
+    beforeEach(() => {
+      query = { username: "risevision", status: {} };
+    });
+
+    it("should request user timeline", () => {
+      simple.mock(Twitter.prototype, "get").resolveWith(sampleTweets);
+
+      return twitter.getUserTimeline({}, query)
+      .then(response => {
+        assert.deepEqual(response, sampleTweets);
+
+        assert(Twitter.prototype.get.called);
+        assert.deepEqual(Twitter.prototype.get.lastCall.args[1], {
+          screen_name: "risevision",
+          count: config.numberOfCachedTweets,
+          tweet_mode: "extended"
+        });
+      });
+    });
+
+    it("should request user timeline since last loaded tweet id", () => {
+      simple.mock(Twitter.prototype, "get").resolveWith(sampleTweets);
+
+      query.status.lastTweetId = "323222";
+
+      return twitter.getUserTimeline({}, query)
+      .then(response => {
+        assert.deepEqual(response, sampleTweets);
+
+        assert(Twitter.prototype.get.called);
+        assert.deepEqual(Twitter.prototype.get.lastCall.args[1], {
+          screen_name: "risevision",
+          count: config.numberOfCachedTweets,
+          tweet_mode: "extended",
+          since_id: "323222"
+        });
       });
     });
   });

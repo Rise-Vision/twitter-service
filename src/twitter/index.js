@@ -25,13 +25,17 @@ const verifyCredentials = credentials => {
 };
 
 const getUserTimeline = (credentials, query) => {
-  const { username } = query
+  const { status, username } = query
 
   const args = {
     screen_name: username,
     count: numberOfCachedTweets,
     tweet_mode: 'extended'
   };
+
+  if (status.lastTweetId) {
+    args.since_id = status.lastTweetId;
+  }
 
   return invokeEndpoint(credentials, 'statuses/user_timeline', args);
 };
