@@ -127,4 +127,36 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
     });
   });
 
+  it("should return tweets if the loading flag is set and there are cached tweets", () => {
+    simple.mock(cache, "getStatusFor").resolveWith({
+      loading: true,
+      loadingStarted: new Date().getTime(),
+      lastUpdated: new Date().getTime()
+    });
+
+    return timelines.handleGetTweetsRequest(req, res)
+    .then(() => {
+      assert(res.json.called);
+      assert.deepEqual(res.json.lastCall.args[0], {
+        tweets: sampleTweetsFormatted,
+        cached: true
+      });
+
+      assert(!twitter.getUserTimeline.called);
+
+      assert.equal(res.header.callCount, 1);
+
+      assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+      const header = res.header.lastCall.args[1];
+      assert(header);
+
+      const fragments = header.split("=");
+      assert.equal(fragments[0], "private, max-age");
+
+      const expiration = Number(fragments[1]);
+      assert.equal(expiration, config.retryLoadInSeconds);
+    });
+  });
+
 });
