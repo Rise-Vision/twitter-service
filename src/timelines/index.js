@@ -52,7 +52,7 @@ const sendError = (res, message, status) => {
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
-  sendError(res, error.message, status);
+  sendError(res, error.message + ":" + error.code + ":" + JSON.stringify(error.errors), status);
 };
 
 const hasCachedTweets = (query) => {
