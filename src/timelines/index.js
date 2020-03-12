@@ -67,17 +67,34 @@ const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credential
   sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
 };
 
+const saveStatus = (query) => {
+  return cache.saveStatus(query.username, {...query.status});
+}
+
 const saveLoadingFlag = (query, loading) => {
   query.status.loading = loading;
   query.status.loadingStarted = loading ? currentTimestamp() : null;
 
-  return cache.saveStatus(query.username, {...query.status});
+  return saveStatus(query);
+}
+
+const saveStatusValues = (query, timeline) => {
+  if (timeline && timeline.length > 0) {
+    query.status.lastTweetId = timeline[0].id_str;
+  }
+
+  query.status.lastUpdated = currentTimestamp();
+
+  return saveStatus(query);
 }
 
 const returnTimeline = (query, res, timeline) => {
   const tweets = timeline.slice(0, query.count);
 
-  res.json({tweets});
+  res.json({
+    tweets,
+    cached: Boolean(query.cached)
+  });
 };
 
 const handleTwitterApiCallError = (res, error) => {
@@ -88,6 +105,22 @@ const handleTwitterApiCallError = (res, error) => {
   logAndSendError(res, error, SERVER_ERROR);
 };
 
+const tweetsCacheIsCurrentFor = (query) => {
+  const lastUpdated = query.status.lastUpdated || 0;
+  const elapsed = currentTimestamp() - lastUpdated;
+
+  return elapsed <= config.cacheExpirationInMillis;
+};
+
+const returnTweetsFromCache = (query, res) => {
+  return cache.getTweetsFor(query.username, query.count)
+  .then(tweets => {
+    query.cached = true;
+
+    return returnTimeline(query, res, tweets);
+  });
+};
+
 const requestRemoteUserTimeline = (query, res, credentials) => {
   return saveLoadingFlag(query, true)
   .then(() => {
@@ -95,7 +128,9 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
     .then(timeline => {
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
 
-      return saveLoadingFlag(query, false)
+      return cache.saveTweets(query.username, formattedTimeline)
+      .then(() => saveStatusValues(query, timeline))
+      .then(() => saveLoadingFlag(query, false))
       .then(() => returnTimeline(query, res, formattedTimeline));
     })
     .catch(error => {
@@ -112,10 +147,12 @@ const getTweets = (query, res, credentials) => {
 
     if (status && status.loading) {
       return handleAnotherRequestIsAlreadyLoadingUserTimeline(query, res, credentials);
+    } else if (tweetsCacheIsCurrentFor(query)) {
+      return returnTweetsFromCache(query, res);
     }
-      return requestRemoteUserTimeline(query, res, credentials);
 
-  })
+    return requestRemoteUserTimeline(query, res, credentials);
+  });
 };
 
 const handleGetTweetsRequest = (req, res) => {
