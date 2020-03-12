@@ -5,6 +5,7 @@ const simple = require("simple-mock");
 
 const cache = require('../../src/redis-cache/api');
 const oauthTokenProvider = require("../../src/redis-otp/api");
+const { SECONDS } = require("../../src/constants");
 const config = require("../../src/config");
 const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
@@ -12,6 +13,8 @@ const twitter = require("../../src/twitter");
 
 const sampleTweets = require("./samples/tweets-timeline").data;
 const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
+
+const maxExpiration = (config.cacheExpirationInMillis / SECONDS) + 1;
 
 describe("Timelines / handleGetTweetsRequest / Cache", () => {
   let req = null;
@@ -25,6 +28,7 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
       }
     };
     res = {
+      header: simple.stub(),
       status: simple.stub(),
       send: simple.stub(),
       json: simple.stub()
@@ -106,6 +110,20 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
       });
 
       assert(!twitter.getUserTimeline.called);
+
+      assert.equal(res.header.callCount, 1);
+
+      assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+      const header = res.header.lastCall.args[1];
+      assert(header);
+
+      const fragments = header.split("=");
+      assert.equal(fragments[0], "private, max-age");
+
+      const expiration = Number(fragments[1]);
+      assert(expiration > 0);
+      assert.equal(expiration, maxExpiration);
     });
   });
 

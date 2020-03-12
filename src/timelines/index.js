@@ -9,7 +9,7 @@ const formatter = require('./data_formatter');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
-  SERVER_ERROR
+  SERVER_ERROR, SECONDS
 } = constants;
 
 const validationErrorFor = message => Promise.reject(new Error(message));
@@ -88,8 +88,23 @@ const saveStatusValues = (query, timeline) => {
   return saveStatus(query);
 }
 
+const getCacheExpirationInSeconds = (status) => {
+  if (status.loading) { // update already loading, return low expiration
+    return config.retryLoadInSeconds;
+  }
+
+  const expirationTimestamp = status.lastUpdated + config.cacheExpirationInMillis;
+  let remainingMillis = expirationTimestamp - currentTimestamp();
+  remainingMillis = Math.max( remainingMillis, 0 );
+
+  return Math.ceil( remainingMillis / SECONDS ) + 1;
+};
+
 const returnTimeline = (query, res, timeline) => {
+  const expiration = getCacheExpirationInSeconds(query.status);
   const tweets = timeline.slice(0, query.count);
+
+  res.header("Cache-control", `private, max-age=${ expiration }`);
 
   res.json({
     tweets,

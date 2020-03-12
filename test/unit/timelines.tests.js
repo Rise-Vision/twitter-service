@@ -18,8 +18,10 @@ const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
-  SERVER_ERROR
+  SERVER_ERROR, SECONDS
 } = constants;
+
+const maxExpiration = (config.cacheExpirationInMillis / SECONDS) + 1;
 
 describe("Timelines", () => {
   let req = null;
@@ -33,6 +35,7 @@ describe("Timelines", () => {
       }
     };
     res = {
+      header: simple.stub(),
       status: simple.stub(),
       send: simple.stub(),
       json: simple.stub()
@@ -178,6 +181,7 @@ describe("Timelines", () => {
           cached: false
         });
 
+        assert.equal(res.header.callCount, 1);
         assert(!res.status.called);
         assert(!res.send.called);
 
@@ -190,7 +194,7 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
         assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
-        // Stopped loading
+        // Status updated
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(cache.saveStatus.calls[1].args[1].loading);
         assert(cache.saveStatus.calls[1].args[1].loadingStarted);
@@ -203,6 +207,18 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
         assert(cache.saveStatus.calls[2].args[1].lastUpdated);
         assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
+
+        assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+        const header = res.header.lastCall.args[1];
+        assert(header);
+
+        const fragments = header.split("=");
+        assert.equal(fragments[0], "private, max-age");
+
+        const expiration = Number(fragments[1]);
+        assert(expiration > 0);
+        assert.equal(expiration, maxExpiration);
       });
     });
 
@@ -232,7 +248,7 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
         assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
-        // Stopped loading
+        // Status updated
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(cache.saveStatus.calls[1].args[1].loading);
         assert(cache.saveStatus.calls[1].args[1].loadingStarted);
@@ -318,6 +334,7 @@ describe("Timelines", () => {
         assert(twitter.getUserTimeline.called);
         assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
 
+        assert.equal(res.header.callCount, 1);
         assert(!res.status.called);
         assert(!res.send.called);
 
@@ -330,7 +347,7 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
         assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
 
-        // Stopped loading
+        // Status updated
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(cache.saveStatus.calls[1].args[1].loading);
         assert(cache.saveStatus.calls[1].args[1].loadingStarted);
@@ -343,6 +360,18 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
         assert(cache.saveStatus.calls[2].args[1].lastUpdated);
         assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
+
+        assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+        const header = res.header.lastCall.args[1];
+        assert(header);
+
+        const fragments = header.split("=");
+        assert.equal(fragments[0], "private, max-age");
+
+        const expiration = Number(fragments[1]);
+        assert(expiration > 0);
+        assert.equal(expiration, maxExpiration);
       });
     });
 
