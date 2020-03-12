@@ -24,7 +24,9 @@ const verifyCredentials = credentials => {
     });
 };
 
-const getUserTimeline = (credentials, username) => {
+const getUserTimeline = (credentials, query) => {
+  const { username } = query
+
   const args = {
     screen_name: username,
     count: numberOfCachedTweets,

@@ -316,7 +316,7 @@ describe("Timelines", () => {
         });
 
         assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1], "risevision");
+        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
 
         assert(!res.status.called);
         assert(!res.send.called);
@@ -362,7 +362,7 @@ describe("Timelines", () => {
         assert(!res.send.called);
 
         assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1], "risevision");
+        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
       });
     });
 
@@ -375,7 +375,7 @@ describe("Timelines", () => {
         assert(res.json.called);
 
         assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1], "uppercase");
+        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "uppercase");
 
         assert(!res.status.called);
         assert(!res.send.called);
