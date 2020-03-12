@@ -1,4 +1,4 @@
-/* eslint-disable max-lines, no-magic-numbers, max-statements */
+/* eslint-disable max-lines, no-magic-numbers, max-statements, no-extra-parens */
 
 const assert = require("assert");
 const simple = require("simple-mock");

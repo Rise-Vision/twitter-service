@@ -89,22 +89,23 @@ const saveStatusValues = (query, timeline) => {
 }
 
 const getCacheExpirationInSeconds = (status) => {
-  if (status.loading) { // update already loading, return low expiration
+  // update already loading, return low expiration
+  if (status.loading) {
     return config.retryLoadInSeconds;
   }
 
   const expirationTimestamp = status.lastUpdated + config.cacheExpirationInMillis;
   let remainingMillis = expirationTimestamp - currentTimestamp();
-  remainingMillis = Math.max( remainingMillis, 0 );
+  remainingMillis = Math.max(remainingMillis, 0);
 
-  return Math.ceil( remainingMillis / SECONDS ) + 1;
+  return Math.ceil(remainingMillis / SECONDS) + 1;
 };
 
 const returnTimeline = (query, res, timeline) => {
   const expiration = getCacheExpirationInSeconds(query.status);
   const tweets = timeline.slice(0, query.count);
 
-  res.header("Cache-control", `private, max-age=${ expiration }`);
+  res.header("Cache-control", `private, max-age=${expiration}`);
 
   res.json({
     tweets,

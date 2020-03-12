@@ -1,11 +1,11 @@
-/* eslint-disable max-lines, no-magic-numbers, max-statements */
+/* eslint-disable max-lines, no-magic-numbers, max-statements, no-extra-parens */
 
 const assert = require("assert");
 const simple = require("simple-mock");
 
 const cache = require('../../src/redis-cache/api');
 const oauthTokenProvider = require("../../src/redis-otp/api");
-const { SECONDS } = require("../../src/constants");
+const {SECONDS} = require("../../src/constants");
 const config = require("../../src/config");
 const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
