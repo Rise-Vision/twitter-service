@@ -124,7 +124,7 @@ const returnTweetsFromCache = (query, res) => {
 const requestRemoteUserTimeline = (query, res, credentials) => {
   return saveLoadingFlag(query, true)
   .then(() => {
-    return twitter.getUserTimeline(credentials, query.username)
+    return twitter.getUserTimeline(credentials, query)
     .then(timeline => {
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
 
