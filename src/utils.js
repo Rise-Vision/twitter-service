@@ -1,4 +1,4 @@
-const currentTimestamp = () => new Date().getTime();
+const currentTimestamp = () => Date.now();
 
 const deepClone = (obj) => {
   return JSON.parse(JSON.stringify(obj));
