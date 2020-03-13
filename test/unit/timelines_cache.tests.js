@@ -95,6 +95,27 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
     });
   });
 
+  it("should clear invalidUsername flag when expiration has passed", () => {
+    simple.mock(cache, "getStatusFor").resolveWith({
+      loading: false,
+      lastUpdated: new Date().getTime() - config.cacheExpirationInMillis - 1,
+      invalidUsername: true
+    });
+
+    return timelines.handleGetTweetsRequest(req, res)
+    .then(() => {
+      assert(res.json.called);
+      assert.deepEqual(res.json.lastCall.args[0], {
+        tweets: sampleTweetsFormatted,
+        cached: false
+      });
+
+      assert(twitter.getUserTimeline.called);
+
+      assert(!cache.saveStatus.lastCall.args[1].invalidUsername);
+    });
+  });
+
   it("should get cached tweets if expiration has not passed", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,

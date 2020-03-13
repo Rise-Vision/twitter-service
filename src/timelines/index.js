@@ -84,14 +84,20 @@ const saveLoadingFlag = (query, loading) => {
   return saveStatus(query);
 }
 
-const saveStatusValues = (query, timeline) => {
+const saveLastUpdatedStatus = (query, params) => {
+  query.status.lastUpdated = currentTimestamp();
+
+  Object.assign(query.status, params);
+
+  return saveStatus(query);
+};
+
+const saveStatusValuesAfterCachingTimeline = (query, timeline) => {
   if (timeline && timeline.length > 0) {
     query.status.lastTweetId = timeline[0].id_str;
   }
 
-  query.status.lastUpdated = currentTimestamp();
-
-  return saveStatus(query);
+  return saveLastUpdatedStatus(query, {invalidUsername: false});
 }
 
 const getCacheExpirationInSeconds = (status) => {
@@ -125,10 +131,7 @@ const handleTwitterApiCallError = (res, query, error) => {
   }
 
   if (twitter.isInvalidUsernameError(error)) {
-    query.status.invalidUsername = true;
-    query.status.lastUpdated = currentTimestamp();
-
-    return saveStatus(query)
+    return saveLastUpdatedStatus(query, {invalidUsername: true})
     .then(() => logAndSendError(res, error, NOT_FOUND_ERROR));
   }
 
@@ -159,7 +162,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
 
       return cache.saveTweets(query.username, formattedTimeline)
-      .then(() => saveStatusValues(query, timeline))
+      .then(() => saveStatusValuesAfterCachingTimeline(query, timeline))
       .then(() => saveLoadingFlag(query, false))
       .then(() => returnTimeline(query, res, formattedTimeline));
     })
