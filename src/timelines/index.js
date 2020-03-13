@@ -5,6 +5,7 @@ const constants = require('../constants');
 const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
+const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
 
 const {
@@ -14,8 +15,6 @@ const {
 
 const validationErrorFor = message => Promise.reject(new Error(message));
 const quotaLimitError = {message: "Quota limit reached."};
-
-const currentTimestamp = () => new Date().getTime();
 
 const validateQueryParams = (req) => {
   const {companyId, count, username} = req.query;
