@@ -55,6 +55,10 @@ const logAndSendError = (res, error, status) => {
   sendError(res, error.message, status);
 };
 
+const hasCachedTweets = (query) => {
+  return query.status.lastUpdated;
+};
+
 const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credentials) => {
   const elapsed = currentTimestamp() - (query.status.loadingStarted || 0);
 
@@ -62,7 +66,9 @@ const handleAnotherRequestIsAlreadyLoadingUserTimeline = (query, res, credential
     return requestRemoteUserTimeline(query, res, credentials);
   }
 
-  // TODO check cached entries will be implemented in other card
+  if (hasCachedTweets(query)) {
+    return returnTweetsFromCache(query, res);
+  }
 
   sendError(res, CONFLICT_ERROR_MESSAGE, CONFLICT_ERROR);
 };
