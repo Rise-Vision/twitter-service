@@ -5,7 +5,7 @@ const simple = require("simple-mock");
 
 const cache = require('../../src/redis-cache/api');
 const oauthTokenProvider = require("../../src/redis-otp/api");
-const {SECONDS} = require("../../src/constants");
+const {NOT_FOUND_ERROR, SECONDS} = require("../../src/constants");
 const config = require("../../src/config");
 const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
@@ -145,6 +145,27 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
       const expiration = Number(fragments[1]);
       assert(expiration > 0);
       assert.equal(expiration, maxExpiration);
+    });
+  });
+
+  it("should return error if expiration has not passed, but invalidUsername flat is on", () => {
+    simple.mock(cache, "getStatusFor").resolveWith({
+      loading: false,
+      lastUpdated: new Date().getTime(),
+      invalidUsername: true
+    });
+
+    return timelines.handleGetTweetsRequest(req, res)
+    .then(() => {
+      assert(!res.json.called);
+
+      assert(res.status.called);
+      assert.equal(res.status.lastCall.args[0], NOT_FOUND_ERROR);
+
+      assert(res.send.called);
+      assert.equal(res.send.lastCall.args[0], "Username not found: 'risevision'");
+
+      assert(!twitter.getUserTimeline.called);
     });
   });
 

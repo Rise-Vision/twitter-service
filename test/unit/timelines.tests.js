@@ -324,7 +324,7 @@ describe("Timelines", () => {
     });
 
     it("should send not found error if username is not valid", () => {
-      const error = new Error("Username not found");
+      const error = new Error();
       error.code = constants.TWITTER_API_RESOURCE_NOT_FOUND_CODE;
 
       simple.mock(twitter, "getUserTimeline").rejectWith(error);
@@ -337,7 +337,7 @@ describe("Timelines", () => {
         assert.equal(res.status.lastCall.args[0], NOT_FOUND_ERROR);
 
         assert(res.send.called);
-        assert.equal(res.send.lastCall.args[0], "Username not found");
+        assert.equal(res.send.lastCall.args[0], "Username not found: 'risevision'");
 
         assert.equal(cache.saveStatus.callCount, 3);
 

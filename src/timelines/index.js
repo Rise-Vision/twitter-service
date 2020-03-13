@@ -49,6 +49,12 @@ const sendError = (res, message, status) => {
   res.send(message);
 };
 
+const sendInvalidUsernameError = (res, query) => {
+  const message = `Username not found: '${query.username}'`;
+
+  sendError(res, message, NOT_FOUND_ERROR);
+};
+
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
@@ -92,7 +98,7 @@ const saveLastUpdatedStatus = (query, params) => {
   return saveStatus(query);
 };
 
-const saveStatusValuesAfterCachingTimeline = (query, timeline) => {
+const saveStatusValuesForTimeline = (query, timeline) => {
   if (timeline && timeline.length > 0) {
     query.status.lastTweetId = timeline[0].id_str;
   }
@@ -132,7 +138,7 @@ const handleTwitterApiCallError = (res, query, error) => {
 
   if (twitter.isInvalidUsernameError(error)) {
     return saveLastUpdatedStatus(query, {invalidUsername: true})
-    .then(() => logAndSendError(res, error, NOT_FOUND_ERROR));
+    .then(() => sendInvalidUsernameError(res, query));
   }
 
   logAndSendError(res, error, SERVER_ERROR);
@@ -146,6 +152,10 @@ const tweetsCacheIsCurrentFor = (query) => {
 };
 
 const returnTweetsFromCache = (query, res) => {
+  if (query.status.invalidUsername) {
+    return sendInvalidUsernameError(res, query);
+  }
+
   return cache.getTweetsFor(query.username, query.count)
   .then(tweets => {
     query.cached = true;
@@ -162,7 +172,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
 
       return cache.saveTweets(query.username, formattedTimeline)
-      .then(() => saveStatusValuesAfterCachingTimeline(query, timeline))
+      .then(() => saveStatusValuesForTimeline(query, timeline))
       .then(() => saveLoadingFlag(query, false))
       .then(() => returnTimeline(query, res, formattedTimeline));
     })
