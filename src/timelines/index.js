@@ -95,7 +95,7 @@ const saveStatusValues = (query, timeline) => {
 }
 
 const getCacheExpirationInSeconds = (status) => {
-  // update already loading, return low expiration
+  // updated data already loading, return low expiration
   if (status.loading) {
     return config.retryLoadInSeconds;
   }
