@@ -18,7 +18,7 @@ const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
-  SERVER_ERROR, SECONDS
+  NOT_FOUND_ERROR, SERVER_ERROR, SECONDS
 } = constants;
 
 const maxExpiration = (config.cacheExpirationInMillis / SECONDS) + 1;
@@ -317,6 +317,44 @@ describe("Timelines", () => {
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(!cache.saveStatus.calls[1].args[1].loading);
         assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+      });
+    });
+
+    it("should send not found error if username is not valid", () => {
+      const error = new Error("Username not found");
+      error.code = constants.TWITTER_API_RESOURCE_NOT_FOUND_CODE;
+
+      simple.mock(twitter, "getUserTimeline").rejectWith(error);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], NOT_FOUND_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Username not found");
+
+        assert.equal(cache.saveStatus.callCount, 3);
+
+        // Started loading
+        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+        assert(cache.saveStatus.calls[0].args[1].loading);
+        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+        assert(!cache.saveStatus.calls[0].args[1].invalidUsername);
+
+        // Stopped loading
+        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+        assert(!cache.saveStatus.calls[1].args[1].loading);
+        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        assert(!cache.saveStatus.calls[1].args[1].invalidUsername);
+
+        // Username invalid set
+        assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+        assert(!cache.saveStatus.calls[2].args[1].loading);
+        assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+        assert(cache.saveStatus.calls[2].args[1].invalidUsername);
       });
     });
 

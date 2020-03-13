@@ -1,4 +1,4 @@
-/* eslint-disable init-declarations */
+/* eslint-disable init-declarations, no-magic-numbers */
 
 const assert = require("assert");
 const simple = require("simple-mock");
@@ -33,6 +33,30 @@ describe("Twitter", () => {
 
     it("should not recognize invalid or expired token error when there is no message string", () => {
       const result = twitter.isInvalidOrExpiredTokenError({});
+
+      assert(!result);
+    });
+  });
+
+  describe("isInvalidUsernameError", () => {
+    it("should recognize invalid username error", () => {
+      const result = twitter.isInvalidUsernameError({
+        code: 34
+      });
+
+      assert(result);
+    });
+
+    it("should not recognize invalid username error on other error code", () => {
+      const result = twitter.isInvalidUsernameError({
+        code: 10
+      });
+
+      assert(!result);
+    });
+
+    it("should not recognize invalid username error when there is no error code", () => {
+      const result = twitter.isInvalidUsernameError({});
 
       assert(!result);
     });
