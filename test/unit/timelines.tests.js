@@ -343,18 +343,21 @@ describe("Timelines", () => {
         assert(cache.saveStatus.calls[0].args[1].loading);
         assert(cache.saveStatus.calls[0].args[1].loadingStarted);
         assert(!cache.saveStatus.calls[0].args[1].invalidUsername);
+        assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
         assert(!cache.saveStatus.calls[1].args[1].loading);
         assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
         assert(!cache.saveStatus.calls[1].args[1].invalidUsername);
+        assert(!cache.saveStatus.calls[1].args[1].lastUpdated);
 
         // Username invalid set
         assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
         assert(!cache.saveStatus.calls[2].args[1].loading);
         assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
         assert(cache.saveStatus.calls[2].args[1].invalidUsername);
+        assert(cache.saveStatus.calls[2].args[1].lastUpdated);
       });
     });
 

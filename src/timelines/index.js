@@ -126,6 +126,7 @@ const handleTwitterApiCallError = (res, query, error) => {
 
   if (twitter.isInvalidUsernameError(error)) {
     query.status.invalidUsername = true;
+    query.status.lastUpdated = currentTimestamp();
 
     return saveStatus(query)
     .then(() => logAndSendError(res, error, NOT_FOUND_ERROR));
