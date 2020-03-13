@@ -9,7 +9,7 @@ const formatter = require('./data_formatter');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
-  SERVER_ERROR, SECONDS
+  NOT_FOUND_ERROR, SERVER_ERROR, SECONDS
 } = constants;
 
 const validationErrorFor = message => Promise.reject(new Error(message));
@@ -52,7 +52,7 @@ const sendError = (res, message, status) => {
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
-  sendError(res, error.message + ":" + error.code + ":" + JSON.stringify(error.errors), status);
+  sendError(res, error.message, status);
 };
 
 const hasCachedTweets = (query) => {
@@ -119,9 +119,16 @@ const returnTimeline = (query, res, timeline) => {
   });
 };
 
-const handleTwitterApiCallError = (res, error) => {
+const handleTwitterApiCallError = (res, query, error) => {
   if (twitter.isInvalidOrExpiredTokenError(error)) {
     return logAndSendError(res, error, FORBIDDEN_ERROR);
+  }
+
+  if (twitter.isInvalidUsernameError(error)) {
+    query.status.invalidUsername = true;
+
+    return saveStatus(query)
+    .then(() => logAndSendError(res, error, NOT_FOUND_ERROR));
   }
 
   logAndSendError(res, error, SERVER_ERROR);
@@ -157,7 +164,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
     })
     .catch(error => {
       return saveLoadingFlag(query, false)
-      .then(() => handleTwitterApiCallError(res, error));
+      .then(() => handleTwitterApiCallError(res, query, error));
     });
   });
 };
