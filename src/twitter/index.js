@@ -1,4 +1,6 @@
 const config = require('../config');
+const constants = require('../constants');
+
 const Twitter = require('twitter');
 const TwitterCredentials = require('./twitter-app-credentials');
 
@@ -54,8 +56,13 @@ const isInvalidOrExpiredTokenError = error => {
   return error.message && error.message === "Invalid or expired token.";
 };
 
+const isInvalidUsernameError = error => {
+  return error.code === constants.TWITTER_API_RESOURCE_NOT_FOUND_CODE;
+}
+
 module.exports = {
   isInvalidOrExpiredTokenError,
+  isInvalidUsernameError,
   getUserTimeline,
   verifyCredentials
 };
