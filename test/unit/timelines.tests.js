@@ -45,6 +45,8 @@ describe("Timelines", () => {
     simple.mock(cache, "saveStatus").resolveWith();
     simple.mock(cache, "saveTweets").resolveWith();
     simple.mock(oauthTokenProvider, "getCredentials").resolveWith({});
+
+    simple.mock(console, "warn");
   });
 
   afterEach(() => {
@@ -167,7 +169,12 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but it has expired", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith({
+        data: sampleTweets,
+        quota: {}
+      });
+      simple.mock(cache, "getUserQuotaFor").resolveWith();
+      simple.mock(cache, "saveUserQuota").resolveWith();
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true,
         loadingStarted: new Date().getTime() - config.loadingFlagTimeoutInMillis - 1
@@ -223,7 +230,12 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but loadingStarted is not defined", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
+      simple.mock(twitter, "getUserTimeline").resolveWith({
+        data: sampleTweets,
+        quota: {}
+      });
+      simple.mock(cache, "getUserQuotaFor").resolveWith();
+      simple.mock(cache, "saveUserQuota").resolveWith();
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true
       });
@@ -269,57 +281,64 @@ describe("Timelines", () => {
   });
 
   describe("handleGetTweetsRequest / Twitter API", () => {
-    it("should reject if Twitter API call fails", () => {
-      simple.mock(twitter, "getUserTimeline").rejectWith(new Error("Network error."));
-
-      return timelines.handleGetTweetsRequest(req, res)
-      .then(() => {
-        assert(!res.json.called);
-
-        assert(res.status.called);
-        assert.equal(res.status.lastCall.args[0], SERVER_ERROR);
-
-        assert(res.send.called);
-        assert.equal(res.send.lastCall.args[0], "Network error.");
-
-        assert.equal(cache.saveStatus.callCount, 2);
-
-        // Started loading
-        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
-        assert(cache.saveStatus.calls[0].args[1].loading);
-        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
-
-        // Stopped loading
-        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(!cache.saveStatus.calls[1].args[1].loading);
-        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
-      });
+    beforeEach(() => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith();
+      simple.mock(cache, "saveUserQuota").resolveWith();
     });
 
-    it("should send forbidden error if Twitter API returns invalid token", () => {
-      simple.mock(twitter, "getUserTimeline").rejectWith(new Error("Invalid or expired token."));
+    describe("reject", () => {
+      it("should reject if Twitter API call fails", () => {
+        simple.mock(twitter, "getUserTimeline").rejectWith({error: new Error("Network error."), quota: {}});
 
-      return timelines.handleGetTweetsRequest(req, res)
-      .then(() => {
-        assert(!res.json.called);
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(!res.json.called);
 
-        assert(res.status.called);
-        assert.equal(res.status.lastCall.args[0], FORBIDDEN_ERROR);
+          assert(res.status.called);
+          assert.equal(res.status.lastCall.args[0], SERVER_ERROR);
 
-        assert(res.send.called);
-        assert.equal(res.send.lastCall.args[0], "Invalid or expired token.");
+          assert(res.send.called);
+          assert.equal(res.send.lastCall.args[0], "Network error.");
 
-        assert.equal(cache.saveStatus.callCount, 2);
+          assert.equal(cache.saveStatus.callCount, 2);
 
-        // Started loading
-        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
-        assert(cache.saveStatus.calls[0].args[1].loading);
-        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+          // Started loading
+          assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+          assert(cache.saveStatus.calls[0].args[1].loading);
+          assert(cache.saveStatus.calls[0].args[1].loadingStarted);
 
-        // Stopped loading
-        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(!cache.saveStatus.calls[1].args[1].loading);
-        assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+          // Stopped loading
+          assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+          assert(!cache.saveStatus.calls[1].args[1].loading);
+          assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        });
+      });
+
+      it("should send forbidden error if Twitter API returns invalid token", () => {
+        simple.mock(twitter, "getUserTimeline").rejectWith({error: new Error("Invalid or expired token."), quota: {}});
+
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(!res.json.called);
+
+          assert(res.status.called);
+          assert.equal(res.status.lastCall.args[0], FORBIDDEN_ERROR);
+
+          assert(res.send.called);
+          assert.equal(res.send.lastCall.args[0], "Invalid or expired token.");
+
+          assert.equal(cache.saveStatus.callCount, 2);
+
+          // Started loading
+          assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+          assert(cache.saveStatus.calls[0].args[1].loading);
+          assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+
+          // Stopped loading
+          assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+          assert(!cache.saveStatus.calls[1].args[1].loading);
+          assert(!cache.saveStatus.calls[1].args[1].loadingStarted);
+        });
       });
     });
 
@@ -327,7 +346,7 @@ describe("Timelines", () => {
       const error = new Error();
       error.code = constants.TWITTER_API_RESOURCE_NOT_FOUND_CODE;
 
-      simple.mock(twitter, "getUserTimeline").rejectWith(error);
+      simple.mock(twitter, "getUserTimeline").rejectWith({error, quota: {}});
 
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
@@ -364,106 +383,118 @@ describe("Timelines", () => {
       });
     });
 
-    it("should return tweets if Twitter API call is successful", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
-
-      return timelines.handleGetTweetsRequest(req, res)
-      .then(() => {
-        assert(res.json.called);
-        assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted,
-          cached: false
+    describe("resolve", () => {
+      beforeEach(() => {
+        simple.mock(twitter, "getUserTimeline").resolveWith({
+          data: sampleTweets,
+          quota: {}
         });
-
-        assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
-
-        assert.equal(res.header.callCount, 1);
-        assert(!res.status.called);
-        assert(!res.send.called);
-
-        assert.equal(cache.saveStatus.callCount, 3);
-
-        // Started loading
-        assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
-        assert(cache.saveStatus.calls[0].args[1].loading);
-        assert(cache.saveStatus.calls[0].args[1].loadingStarted);
-        assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
-        assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
-
-        // Status updated
-        assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
-        assert(cache.saveStatus.calls[1].args[1].loading);
-        assert(cache.saveStatus.calls[1].args[1].loadingStarted);
-        assert(cache.saveStatus.calls[1].args[1].lastUpdated);
-        assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
-
-        // Stopped loading
-        assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
-        assert(!cache.saveStatus.calls[2].args[1].loading);
-        assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
-        assert(cache.saveStatus.calls[2].args[1].lastUpdated);
-        assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
-
-        assert.equal(res.header.lastCall.args[0], "Cache-control");
-
-        const header = res.header.lastCall.args[1];
-        assert(header);
-
-        const fragments = header.split("=");
-        assert.equal(fragments[0], "private, max-age");
-
-        const expiration = Number(fragments[1]);
-        assert(expiration > 0);
-        assert.equal(expiration, maxExpiration);
       });
-    });
 
-    it("should return tweets even if there's no username status stored", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
-      simple.mock(cache, "getStatusFor").resolveWith(null);
+      it("should return tweets if Twitter API call is successful", () => {
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(res.json.called);
+          assert.deepEqual(res.json.lastCall.args[0], {
+            tweets: sampleTweetsFormatted,
+            cached: false
+          });
 
-      return timelines.handleGetTweetsRequest(req, res)
-      .then(() => {
-        assert(res.json.called);
-        assert.deepEqual(res.json.lastCall.args[0], {
-          tweets: sampleTweetsFormatted,
-          cached: false
+          assert(twitter.getUserTimeline.called);
+          assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
+
+          assert.equal(res.header.callCount, 1);
+          assert(!res.status.called);
+          assert(!res.send.called);
+
+          assert.equal(cache.saveStatus.callCount, 3);
+
+          // Started loading
+          assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+          assert(cache.saveStatus.calls[0].args[1].loading);
+          assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+          assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
+          assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
+
+          // Status updated
+          assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+          assert(cache.saveStatus.calls[1].args[1].loading);
+          assert(cache.saveStatus.calls[1].args[1].loadingStarted);
+          assert(cache.saveStatus.calls[1].args[1].lastUpdated);
+          assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+
+          // Stopped loading
+          assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+          assert(!cache.saveStatus.calls[2].args[1].loading);
+          assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+          assert(cache.saveStatus.calls[2].args[1].lastUpdated);
+          assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
+
+          assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+          const header = res.header.lastCall.args[1];
+          assert(header);
+
+          const fragments = header.split("=");
+          assert.equal(fragments[0], "private, max-age");
+
+          const expiration = Number(fragments[1]);
+          assert(expiration > 0);
+          assert.equal(expiration, maxExpiration);
         });
+      });
 
-        assert(!res.status.called);
-        assert(!res.send.called);
+      it("should return tweets even if there's no username status stored", () => {
+        simple.mock(cache, "getStatusFor").resolveWith(null);
 
-        assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(res.json.called);
+          assert.deepEqual(res.json.lastCall.args[0], {
+            tweets: sampleTweetsFormatted,
+            cached: false
+          });
+
+          assert(!res.status.called);
+          assert(!res.send.called);
+
+          assert(twitter.getUserTimeline.called);
+          assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
+        });
+      });
+
+      it("should transform username to lowercase", () => {
+        req.query.username = "UPPERCASE";
+
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(res.json.called);
+
+          assert(twitter.getUserTimeline.called);
+          assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "uppercase");
+
+          assert(!res.status.called);
+          assert(!res.send.called);
+
+          assert.equal(cache.saveStatus.calls[0].args[0], "uppercase");
+          assert.equal(cache.saveStatus.calls[1].args[0], "uppercase");
+        });
       });
     });
-
-    it("should transform username to lowercase", () => {
-      req.query.username = "UPPERCASE";
-      simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
-
-      return timelines.handleGetTweetsRequest(req, res)
-      .then(() => {
-        assert(res.json.called);
-
-        assert(twitter.getUserTimeline.called);
-        assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "uppercase");
-
-        assert(!res.status.called);
-        assert(!res.send.called);
-
-        assert.equal(cache.saveStatus.calls[0].args[0], "uppercase");
-        assert.equal(cache.saveStatus.calls[1].args[0], "uppercase");
-      });
-    });
-
   });
 
   describe("handleGetTweetsRequest / Limit output", () => {
-    it("should return 25 tweets by default", () => {
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
+    beforeEach(() => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith();
+      simple.mock(cache, "saveUserQuota").resolveWith();
 
+      simple.mock(twitter, "getUserTimeline").resolveWith({
+        data: sample30Tweets,
+        quota: {}
+      });
+    });
+
+    it("should return 25 tweets by default", () => {
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
         assert(res.json.called);
@@ -481,8 +512,6 @@ describe("Timelines", () => {
     it("should limit number of tweets based on count param", () => {
       req.query.count = "15";
 
-      simple.mock(twitter, "getUserTimeline").resolveWith(sample30Tweets);
-
       return timelines.handleGetTweetsRequest(req, res)
       .then(() => {
         assert(res.json.called);
@@ -494,6 +523,140 @@ describe("Timelines", () => {
 
         assert(!res.status.called);
         assert(!res.send.called);
+      });
+    });
+  });
+
+  describe("handleGetTweetsRequest / Quota", () => {
+    let tlResponse = null;
+
+    beforeEach(() => {
+      tlResponse = {
+        data: sample30Tweets,
+        quota: {}
+      };
+
+      simple.mock(cache, "saveUserQuota").resolveWith();
+
+      simple.mock(twitter, "getUserTimeline").resolveWith(tlResponse);
+    });
+
+    it("should resolve if quota information is not cached", () => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith(null);
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(cache.getUserQuotaFor.called);
+        assert(res.json.called);
+        assert(!res.status.called);
+      });
+    });
+
+    it("should resolve if remaining quota is greater than 0", () => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith({remaining: 10});
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(cache.getUserQuotaFor.called);
+        assert(res.json.called);
+        assert(!res.status.called);
+      });
+    });
+
+    it("should resolve if remaining quota is less than 0 but reset timestamp has passed", () => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith({remaining: 0, resetTs: (Date.now() / SECONDS) - 100});
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(cache.getUserQuotaFor.called);
+        assert(res.json.called);
+        assert(!res.status.called);
+      });
+    });
+
+    it("should reject if remaining quota is equal to 0 and reset timestamp has not passed", () => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith({remaining: 0, resetTs: (Date.now() / SECONDS) + 100});
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(cache.getUserQuotaFor.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], CONFLICT_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Quota limit reached.");
+      });
+    });
+
+    it("should reject if cached quota is valid but Twitter API rejects", () => {
+      simple.mock(cache, "getUserQuotaFor").resolveWith(null);
+      simple.mock(twitter, "getUserTimeline").rejectWith({
+        quota: {
+          remaining: 0,
+          resetTs: (Date.now() / SECONDS) + 100,
+          valid: false
+        },
+        error: {
+          quotaLimitReached: true
+        }
+      });
+
+      return timelines.handleGetTweetsRequest(req, res)
+      .then(() => {
+        assert(cache.getUserQuotaFor.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], CONFLICT_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Quota limit reached.");
+      });
+    });
+
+    describe("should log when quota usage is high", () => {
+      it("should log when quota information is not available", () => {
+        simple.mock(cache, "getUserQuotaFor").resolveWith(null);
+
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(cache.getUserQuotaFor.called);
+
+          assert(console.warn.called);
+          assert.equal(console.warn.lastCall.args[0], "Missing rate limit headers for company: test");
+        });
+      });
+
+      it("should log when quota usage is above 50%", () => {
+        simple.mock(cache, "getUserQuotaFor").resolveWith(null);
+
+        tlResponse.quota.remaining = 40;
+        tlResponse.quota.total = 100;
+        tlResponse.quota.resetTs = (Date.now() / SECONDS) + 100;
+
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(cache.getUserQuotaFor.called);
+
+          assert(console.warn.called);
+          assert.equal(console.warn.lastCall.args[0], "Current quota usage above 50% for company: test");
+        });
+      });
+
+      it("should log when quota usage is above 80%", () => {
+        simple.mock(cache, "getUserQuotaFor").resolveWith(null);
+
+        tlResponse.quota.remaining = 15;
+        tlResponse.quota.total = 100;
+        tlResponse.quota.resetTs = (Date.now() / SECONDS) + 100;
+
+        return timelines.handleGetTweetsRequest(req, res)
+        .then(() => {
+          assert(cache.getUserQuotaFor.called);
+
+          assert(console.warn.called);
+          assert.equal(console.warn.lastCall.args[0], "Current quota usage above 80% for company: test");
+        });
       });
     });
   });

@@ -38,8 +38,13 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
     simple.mock(cache, "saveStatus").resolveWith();
     simple.mock(cache, "getTweetsFor").resolveWith(sampleTweetsFormatted);
     simple.mock(cache, "saveTweets").resolveWith();
+    simple.mock(cache, "getUserQuotaFor").resolveWith();
+    simple.mock(cache, "saveUserQuota").resolveWith();
     simple.mock(oauthTokenProvider, "getCredentials").resolveWith({});
-    simple.mock(twitter, "getUserTimeline").resolveWith(sampleTweets);
+    simple.mock(twitter, "getUserTimeline").resolveWith({
+      data: sampleTweets,
+      quota: {}
+    });
   });
 
   afterEach(() => {

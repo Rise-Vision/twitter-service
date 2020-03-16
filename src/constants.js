@@ -3,11 +3,13 @@
 const SECONDS = 1000;
 const MINUTES = 60 * SECONDS;
 const HOURS = 60 * MINUTES;
+const PERCENT = 100;
 
 module.exports = {
   SECONDS,
   MINUTES,
   HOURS,
+  PERCENT,
   BAD_REQUEST_ERROR: 400,
   FORBIDDEN_ERROR: 403,
   NOT_FOUND_ERROR: 404,

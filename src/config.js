@@ -7,6 +7,8 @@ module.exports = {
   defaultTweetCount: 25,
   cacheExpirationInMillis: 4 * HOURS,
   loadingFlagTimeoutInMillis: 2 * MINUTES,
+  quotaNormalPct: 0.5,
+  quotaSeverePct: 0.2,
 
   /* client will be asked to retry after this time to see if loading flag has been cleared */
   retryLoadInSeconds: 30,

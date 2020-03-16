@@ -64,7 +64,7 @@ describe("Twitter", () => {
 
   describe("verifyCredentials", () => {
     it("should resolve to true on successful invocation", (done) => {
-      simple.mock(Twitter.prototype, "get").resolveWith({});
+      simple.mock(Twitter.prototype, "get").callbackWith(null, {}, {headers: {}});
 
       twitter.verifyCredentials("test")
       .then(response => {
@@ -78,11 +78,11 @@ describe("Twitter", () => {
         message: "Invalid credentials"
       };
 
-      simple.mock(Twitter.prototype, "get").rejectWith([error]);
+      simple.mock(Twitter.prototype, "get").callbackWith([error], null, {headers: {}});
 
       twitter.verifyCredentials("test")
       .catch(response => {
-        assert.equal(response, error);
+        assert.equal(response.error, error);
         done();
       });
     });
@@ -99,11 +99,11 @@ describe("Twitter", () => {
     });
 
     it("should request user timeline", () => {
-      simple.mock(Twitter.prototype, "get").resolveWith(sampleTweets);
+      simple.mock(Twitter.prototype, "get").callbackWith(null, sampleTweets, {headers: {}});
 
       return twitter.getUserTimeline({}, query)
       .then(response => {
-        assert.deepEqual(response, sampleTweets);
+        assert.deepEqual(response.data, sampleTweets);
 
         assert(Twitter.prototype.get.called);
         assert.deepEqual(Twitter.prototype.get.lastCall.args[1], {
@@ -115,13 +115,13 @@ describe("Twitter", () => {
     });
 
     it("should request user timeline since last loaded tweet id", () => {
-      simple.mock(Twitter.prototype, "get").resolveWith(sampleTweets);
+      simple.mock(Twitter.prototype, "get").callbackWith(null, sampleTweets, {headers: {}});
 
       query.status.lastTweetId = "323222";
 
       return twitter.getUserTimeline({}, query)
       .then(response => {
-        assert.deepEqual(response, sampleTweets);
+        assert.deepEqual(response.data, sampleTweets);
 
         assert(Twitter.prototype.get.called);
         assert.deepEqual(Twitter.prototype.get.lastCall.args[1], {

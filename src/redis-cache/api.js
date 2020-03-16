@@ -3,6 +3,7 @@ const redis = require("redis-promise");
 
 const statusKeyFor = username => `${username}:status`;
 const tweetsKeyFor = username => `${username}:tweets`;
+const userQuotaKeyFor = companyId => `${companyId}:quota:user-timeline`;
 
 const parseJSON = (value) => {return value ? JSON.parse(value) : null};
 
@@ -38,9 +39,22 @@ const saveTweets = (username, tweets) => {
   .then(() => redis.trimLeft(key, 0, config.numberOfCachedTweets - 1));
 };
 
+const getUserQuotaFor = companyId => {
+  return redis.getString(userQuotaKeyFor(companyId))
+  .then(parseJSON);
+}
+
+const saveUserQuota = (companyId, quota) => {
+  const value = JSON.stringify(quota);
+
+  return redis.setString(userQuotaKeyFor(companyId), value);
+};
+
 module.exports = {
   getStatusFor,
   getTweetsFor,
   saveStatus,
-  saveTweets
+  saveTweets,
+  getUserQuotaFor,
+  saveUserQuota
 };

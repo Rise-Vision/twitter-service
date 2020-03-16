@@ -43,17 +43,37 @@ const getUserTimeline = (credentials, query) => {
 };
 
 const invokeEndpoint = (clientCredentials, endpoint, args) => {
-  const client = createInstance(clientCredentials);
+  return new Promise((resolve, reject) => {
+    const client = createInstance(clientCredentials);
 
-  return client.get(endpoint, args || {})
-    .catch(err => {
-      return Promise.reject(err.length > 0 ? err[0] : err);
+    client.get(endpoint, args || {}, function (err, data, response) {
+      const total = Number(response.headers['x-rate-limit-limit']);
+      const remaining = Number(response.headers['x-rate-limit-remaining']);
+      const resetTs = Number(response.headers['x-rate-limit-reset']);
+      const quota = {total, remaining, resetTs, valid: total > 0};
+      const status = response.status;
+
+      if (err) {
+        const error = {
+          status,
+          quota,
+          error: err.length > 0 ? err[0] : err
+        };
+
+        reject(error);
+      } else {
+        resolve({status, quota, data});
+      }
     });
+  });
 };
-
 
 const isInvalidOrExpiredTokenError = error => {
   return error.message && error.message === "Invalid or expired token.";
+};
+
+const isQuotaLimitReachedError = error => {
+  return error.quotaLimitReached;
 };
 
 const isInvalidUsernameError = error => {
@@ -62,6 +82,7 @@ const isInvalidUsernameError = error => {
 
 module.exports = {
   isInvalidOrExpiredTokenError,
+  isQuotaLimitReachedError,
   isInvalidUsernameError,
   getUserTimeline,
   verifyCredentials

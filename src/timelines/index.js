@@ -9,10 +9,11 @@ const formatter = require('./data_formatter');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
-  NOT_FOUND_ERROR, SERVER_ERROR, SECONDS
+  NOT_FOUND_ERROR, SERVER_ERROR, SECONDS, PERCENT
 } = constants;
 
 const validationErrorFor = message => Promise.reject(new Error(message));
+const quotaLimitError = {message: "Quota limit reached."};
 
 const currentTimestamp = () => new Date().getTime();
 
@@ -83,6 +84,40 @@ const saveStatus = (query) => {
   return cache.saveStatus(query.username, {...query.status});
 }
 
+const checkUserQuota = (query) => {
+  const {companyId} = query;
+
+  return cache.getUserQuotaFor(companyId)
+  .then(quota => {
+    if (!quota || quota.remaining > 0 || quota.resetTs < currentTimestamp() / SECONDS) {
+      return Promise.resolve();
+    }
+
+    const err = {...quota, quotaLimitReached: true};
+
+    return Promise.reject(err);
+  });
+}
+
+const saveUserQuota = (query, apiRes) => {
+  const {companyId} = query;
+  const remaining = apiRes.status === CONFLICT_ERROR ? 0 : apiRes.quota && apiRes.quota.remaining;
+  const resetTs = apiRes.quota && apiRes.quota.resetTs;
+  const quota = {remaining, resetTs};
+
+  return apiRes.quota && apiRes.quota.valid ? cache.saveUserQuota(companyId, quota) : Promise.resolve();
+}
+
+const logUserQuota = (companyId, quota) => {
+  if (!quota || !quota.total || !quota.remaining) {
+    console.warn(`Missing rate limit headers for company: ${companyId}`);
+  } else if (quota.remaining < quota.total * config.quotaSeverePct) {
+    console.warn(`Current quota usage above ${(1 - config.quotaSeverePct) * PERCENT}% for company: ${companyId}`);
+  } else if (quota.remaining < quota.total * config.quotaNormalPct) {
+    console.warn(`Current quota usage above ${(1 - config.quotaNormalPct) * PERCENT}% for company: ${companyId}`);
+  }
+}
+
 const saveLoadingFlag = (query, loading) => {
   query.status.loading = loading;
   query.status.loadingStarted = loading ? currentTimestamp() : null;
@@ -134,6 +169,8 @@ const returnTimeline = (query, res, timeline) => {
 const handleTwitterApiCallError = (res, query, error) => {
   if (twitter.isInvalidOrExpiredTokenError(error)) {
     return logAndSendError(res, error, FORBIDDEN_ERROR);
+  } else if (twitter.isQuotaLimitReachedError(error)) {
+    return logAndSendError(res, quotaLimitError, CONFLICT_ERROR);
   }
 
   if (twitter.isInvalidUsernameError(error)) {
@@ -165,20 +202,30 @@ const returnTweetsFromCache = (query, res) => {
 };
 
 const requestRemoteUserTimeline = (query, res, credentials) => {
-  return saveLoadingFlag(query, true)
+  const {companyId} = query;
+
+  return checkUserQuota(query)
+  .then(() => saveLoadingFlag(query, true))
   .then(() => {
     return twitter.getUserTimeline(credentials, query)
-    .then(timeline => {
+    .then(resp => {
+      const timeline = resp.data;
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
+
+      logUserQuota(companyId, resp.quota);
 
       return cache.saveTweets(query.username, formattedTimeline)
       .then(() => saveStatusValuesForTimeline(query, timeline))
       .then(() => saveLoadingFlag(query, false))
+      .then(() => saveUserQuota(query, resp))
       .then(() => returnTimeline(query, res, formattedTimeline));
     })
-    .catch(error => {
+    .catch(err => {
+      logUserQuota(companyId, err.quota);
+
       return saveLoadingFlag(query, false)
-      .then(() => handleTwitterApiCallError(res, query, error));
+      .then(() => saveUserQuota(query, err))
+      .then(() => handleTwitterApiCallError(res, query, err.error));
     });
   });
 };
@@ -204,7 +251,13 @@ const handleGetTweetsRequest = (req, res) => {
     return oauthTokenProvider.getCredentials(req)
     .then(credentials => {
       return getTweets(query, res, credentials)
-      .catch(error => logAndSendError(res, error, SERVER_ERROR));
+      .catch(err => {
+        if (twitter.isQuotaLimitReachedError(err)) {
+          logAndSendError(res, quotaLimitError, CONFLICT_ERROR);
+        } else {
+          logAndSendError(res, err.error, SERVER_ERROR);
+        }
+      });
     })
     .catch(error => logAndSendError(res, error, FORBIDDEN_ERROR));
   })
