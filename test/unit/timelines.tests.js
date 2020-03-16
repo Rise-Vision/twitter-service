@@ -247,6 +247,7 @@ describe("Timelines", () => {
         assert(cache.saveStatus.calls[0].args[1].loadingStarted);
         assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
         assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
+        assert(!cache.saveStatus.calls[0].args[1].invalidUsername);
 
         // Status updated
         assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
@@ -254,6 +255,7 @@ describe("Timelines", () => {
         assert(cache.saveStatus.calls[1].args[1].loadingStarted);
         assert(cache.saveStatus.calls[1].args[1].lastUpdated);
         assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+        assert(!cache.saveStatus.calls[1].args[1].invalidUsername);
 
         // Stopped loading
         assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
@@ -261,6 +263,7 @@ describe("Timelines", () => {
         assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
         assert(cache.saveStatus.calls[2].args[1].lastUpdated);
         assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
+        assert(!cache.saveStatus.calls[2].args[1].invalidUsername);
       });
     });
   });
@@ -321,7 +324,7 @@ describe("Timelines", () => {
     });
 
     it("should send not found error if username is not valid", () => {
-      const error = new Error("Username not found");
+      const error = new Error();
       error.code = constants.TWITTER_API_RESOURCE_NOT_FOUND_CODE;
 
       simple.mock(twitter, "getUserTimeline").rejectWith(error);
@@ -334,7 +337,7 @@ describe("Timelines", () => {
         assert.equal(res.status.lastCall.args[0], NOT_FOUND_ERROR);
 
         assert(res.send.called);
-        assert.equal(res.send.lastCall.args[0], "Username not found");
+        assert.equal(res.send.lastCall.args[0], "Username not found: 'risevision'");
 
         assert.equal(cache.saveStatus.callCount, 3);
 

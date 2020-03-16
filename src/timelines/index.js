@@ -49,6 +49,12 @@ const sendError = (res, message, status) => {
   res.send(message);
 };
 
+const sendInvalidUsernameError = (res, query) => {
+  const message = `Username not found: '${query.username}'`;
+
+  sendError(res, message, NOT_FOUND_ERROR);
+};
+
 const logAndSendError = (res, error, status) => {
   console.error(error);
 
@@ -84,18 +90,24 @@ const saveLoadingFlag = (query, loading) => {
   return saveStatus(query);
 }
 
-const saveStatusValues = (query, timeline) => {
+const saveLastUpdatedStatus = (query, params) => {
+  query.status.lastUpdated = currentTimestamp();
+
+  Object.assign(query.status, params);
+
+  return saveStatus(query);
+};
+
+const saveStatusValuesForTimeline = (query, timeline) => {
   if (timeline && timeline.length > 0) {
     query.status.lastTweetId = timeline[0].id_str;
   }
 
-  query.status.lastUpdated = currentTimestamp();
-
-  return saveStatus(query);
+  return saveLastUpdatedStatus(query, {invalidUsername: false});
 }
 
 const getCacheExpirationInSeconds = (status) => {
-  // update already loading, return low expiration
+  // updated data already loading, return low expiration
   if (status.loading) {
     return config.retryLoadInSeconds;
   }
@@ -125,11 +137,8 @@ const handleTwitterApiCallError = (res, query, error) => {
   }
 
   if (twitter.isInvalidUsernameError(error)) {
-    query.status.invalidUsername = true;
-    query.status.lastUpdated = currentTimestamp();
-
-    return saveStatus(query)
-    .then(() => logAndSendError(res, error, NOT_FOUND_ERROR));
+    return saveLastUpdatedStatus(query, {invalidUsername: true})
+    .then(() => sendInvalidUsernameError(res, query));
   }
 
   logAndSendError(res, error, SERVER_ERROR);
@@ -143,6 +152,10 @@ const tweetsCacheIsCurrentFor = (query) => {
 };
 
 const returnTweetsFromCache = (query, res) => {
+  if (query.status.invalidUsername) {
+    return sendInvalidUsernameError(res, query);
+  }
+
   return cache.getTweetsFor(query.username, query.count)
   .then(tweets => {
     query.cached = true;
@@ -159,7 +172,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
       const formattedTimeline = formatter.getTimelineFormatted(timeline);
 
       return cache.saveTweets(query.username, formattedTimeline)
-      .then(() => saveStatusValues(query, timeline))
+      .then(() => saveStatusValuesForTimeline(query, timeline))
       .then(() => saveLoadingFlag(query, false))
       .then(() => returnTimeline(query, res, formattedTimeline));
     })
