@@ -53,6 +53,8 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   });
 
   it("should not get cached tweets if there is no lastUpdated flag", () => {
+    req.query.count = "3";
+
     return timelines.handleGetTweetsRequest(req, res)
     .then(() => {
       assert(res.json.called);
@@ -66,6 +68,8 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   });
 
   it("should not get cached tweets if lastUpdated flag is very old", () => {
+    req.query.count = "3";
+
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
       lastUpdated: 1
@@ -84,6 +88,8 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   });
 
   it("should not get cached tweets if expiration has passed", () => {
+    req.query.count = "3";
+
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
       lastUpdated: utils.currentTimestamp() - config.cacheExpirationInMillis - 1
@@ -102,6 +108,8 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   });
 
   it("should clear invalidUsername flag when expiration has passed", () => {
+    req.query.count = "3";
+
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
       lastUpdated: utils.currentTimestamp() - config.cacheExpirationInMillis - 1,
@@ -204,6 +212,61 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
 
       const expiration = Number(fragments[1]);
       assert.equal(expiration, config.retryLoadInSeconds);
+    });
+  });
+
+  it("should return cached tweets if the remotely returned tweet count is less than what it's requested", () => {
+    req.query.count = "10";
+
+    return timelines.handleGetTweetsRequest(req, res)
+    .then(() => {
+      assert(res.json.called);
+      assert.deepEqual(res.json.lastCall.args[0], {
+        tweets: sampleTweetsFormatted,
+        cached: true
+      });
+
+      assert(twitter.getUserTimeline.called);
+      assert.equal(twitter.getUserTimeline.lastCall.args[1].username, "risevision");
+
+      assert.equal(res.header.callCount, 1);
+      assert(!res.status.called);
+      assert(!res.send.called);
+
+      assert.equal(cache.saveStatus.callCount, 3);
+
+      // Started loading
+      assert.equal(cache.saveStatus.calls[0].args[0], "risevision");
+      assert(cache.saveStatus.calls[0].args[1].loading);
+      assert(cache.saveStatus.calls[0].args[1].loadingStarted);
+      assert(!cache.saveStatus.calls[0].args[1].lastUpdated);
+      assert(!cache.saveStatus.calls[0].args[1].lastTweetId);
+
+      // Status updated
+      assert.equal(cache.saveStatus.calls[1].args[0], "risevision");
+      assert(cache.saveStatus.calls[1].args[1].loading);
+      assert(cache.saveStatus.calls[1].args[1].loadingStarted);
+      assert(cache.saveStatus.calls[1].args[1].lastUpdated);
+      assert.equal(cache.saveStatus.calls[1].args[1].lastTweetId, "1");
+
+      // Stopped loading
+      assert.equal(cache.saveStatus.calls[2].args[0], "risevision");
+      assert(!cache.saveStatus.calls[2].args[1].loading);
+      assert(!cache.saveStatus.calls[2].args[1].loadingStarted);
+      assert(cache.saveStatus.calls[2].args[1].lastUpdated);
+      assert.equal(cache.saveStatus.calls[2].args[1].lastTweetId, "1");
+
+      assert.equal(res.header.lastCall.args[0], "Cache-control");
+
+      const header = res.header.lastCall.args[1];
+      assert(header);
+
+      const fragments = header.split("=");
+      assert.equal(fragments[0], "private, max-age");
+
+      const expiration = Number(fragments[1]);
+      assert(expiration > 0);
+      assert.equal(expiration, maxExpiration);
     });
   });
 

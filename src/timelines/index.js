@@ -209,6 +209,14 @@ const handleGetUserTimelineResponse = (query, twitterResp) => {
   .then(() => formattedTimeline);
 };
 
+const returnRemoteUserTimeline = (query, res, timeline) => {
+  if (timeline.length < query.count) {
+    return returnTweetsFromCache(query, res);
+  }
+
+  return returnTimeline(query, res, timeline);
+};
+
 const requestRemoteUserTimeline = (query, res, credentials) => {
   const {companyId} = query;
 
@@ -223,7 +231,7 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
       .then(formattedTimeline => {
         return saveLoadingFlag(query, false)
         .then(() => saveUserQuota(query, twitterResp))
-        .then(() => returnTimeline(query, res, formattedTimeline));
+        .then(() => returnRemoteUserTimeline(query, res, formattedTimeline));
       });
     })
     .catch(err => {
