@@ -10,6 +10,7 @@ const constants = require("../../src/constants");
 const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
 const twitter = require("../../src/twitter");
+const utils = require("../../src/utils");
 
 const sample30Tweets = require("./samples/tweets-30").data;
 const sampleTweets = require("./samples/tweets-timeline").data;
@@ -151,7 +152,7 @@ describe("Timelines", () => {
     it("should reject if the loading flag is set", () => {
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true,
-        loadingStarted: new Date().getTime()
+        loadingStarted: utils.currentTimestamp()
       });
 
       return timelines.handleGetTweetsRequest(req, res)
@@ -177,7 +178,7 @@ describe("Timelines", () => {
       simple.mock(cache, "saveUserQuota").resolveWith();
       simple.mock(cache, "getStatusFor").resolveWith({
         loading: true,
-        loadingStarted: new Date().getTime() - config.loadingFlagTimeoutInMillis - 1
+        loadingStarted: utils.currentTimestamp() - config.loadingFlagTimeoutInMillis - 1
       });
 
       return timelines.handleGetTweetsRequest(req, res)

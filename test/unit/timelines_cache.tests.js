@@ -10,6 +10,7 @@ const config = require("../../src/config");
 const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
 const twitter = require("../../src/twitter");
+const utils = require("../../src/utils");
 
 const sampleTweets = require("./samples/tweets-timeline").data;
 const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
@@ -85,7 +86,7 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   it("should not get cached tweets if expiration has passed", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
-      lastUpdated: new Date().getTime() - config.cacheExpirationInMillis - 1
+      lastUpdated: utils.currentTimestamp() - config.cacheExpirationInMillis - 1
     });
 
     return timelines.handleGetTweetsRequest(req, res)
@@ -103,7 +104,7 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   it("should clear invalidUsername flag when expiration has passed", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
-      lastUpdated: new Date().getTime() - config.cacheExpirationInMillis - 1,
+      lastUpdated: utils.currentTimestamp() - config.cacheExpirationInMillis - 1,
       invalidUsername: true
     });
 
@@ -124,7 +125,7 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   it("should get cached tweets if expiration has not passed", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
-      lastUpdated: new Date().getTime()
+      lastUpdated: utils.currentTimestamp()
     });
 
     return timelines.handleGetTweetsRequest(req, res)
@@ -156,7 +157,7 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   it("should return error if expiration has not passed, but invalidUsername flat is on", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: false,
-      lastUpdated: new Date().getTime(),
+      lastUpdated: utils.currentTimestamp(),
       invalidUsername: true
     });
 
@@ -177,8 +178,8 @@ describe("Timelines / handleGetTweetsRequest / Cache", () => {
   it("should return tweets if the loading flag is set and there are cached tweets", () => {
     simple.mock(cache, "getStatusFor").resolveWith({
       loading: true,
-      loadingStarted: new Date().getTime(),
-      lastUpdated: new Date().getTime()
+      loadingStarted: utils.currentTimestamp(),
+      lastUpdated: utils.currentTimestamp()
     });
 
     return timelines.handleGetTweetsRequest(req, res)
