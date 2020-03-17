@@ -4,6 +4,7 @@
   "description": "Rise Vision Twitter Service",
   "main": "index.js",
   "scripts": {
+    "preinstall": "npx npm-force-resolutions || true",
     "test": "eslint . && mocha -t 20000 -r test/mocha-env.js test/unit/** test/integration/**",
     "dev": "TS_PORT=8080 NODE_ENV=test nodemon index.js",
     "start": "node index.js"
@@ -36,5 +37,9 @@
     "redis": "^3.0.2",
     "redis-promise": "git+https://github.com/Rise-Vision/redis-promise.git#1.2.0",
     "twitter": "^1.7.1"
+  },
+  "resolutions": {
+    "acorn": "^7.1.1",
+    "minimist": "^1.2.2"
   }
 }
