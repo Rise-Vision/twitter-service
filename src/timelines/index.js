@@ -200,6 +200,22 @@ const returnTweetsFromCache = (query, res) => {
   });
 };
 
+const saveUserTimeline = (query, timeline) => {
+  const formattedTimeline = formatter.getTimelineFormatted(timeline);
+
+  return cache.saveTweets(query.username, formattedTimeline)
+  .then(() => saveStatusValuesForTimeline(query, timeline))
+  .then(() => formattedTimeline);
+};
+
+const returnRemoteUserTimeline = (query, res, timeline) => {
+  if (timeline.length < query.count) {
+    return returnTweetsFromCache(query, res);
+  }
+
+  return returnTimeline(query, res, timeline);
+};
+
 const requestRemoteUserTimeline = (query, res, credentials) => {
   const {companyId} = query;
 
@@ -208,16 +224,14 @@ const requestRemoteUserTimeline = (query, res, credentials) => {
   .then(() => {
     return twitter.getUserTimeline(credentials, query)
     .then(resp => {
-      const timeline = resp.data;
-      const formattedTimeline = formatter.getTimelineFormatted(timeline);
-
       logUserQuota(companyId, resp.quota);
 
-      return cache.saveTweets(query.username, formattedTimeline)
-      .then(() => saveStatusValuesForTimeline(query, timeline))
-      .then(() => saveLoadingFlag(query, false))
-      .then(() => saveUserQuota(query, resp))
-      .then(() => returnTimeline(query, res, formattedTimeline));
+      return saveUserTimeline(query, resp.data)
+      .then(formattedTimeline => {
+        return saveLoadingFlag(query, false)
+        .then(() => saveUserQuota(query, resp))
+        .then(() => returnRemoteUserTimeline(query, res, formattedTimeline));
+      });
     })
     .catch(err => {
       logUserQuota(companyId, err.quota);

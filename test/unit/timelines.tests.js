@@ -170,6 +170,8 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but it has expired", () => {
+      req.query.count = "3";
+
       simple.mock(twitter, "getUserTimeline").resolveWith({
         data: sampleTweets,
         quota: {}
@@ -231,6 +233,8 @@ describe("Timelines", () => {
     });
 
     it("should return tweets if loading is turned on but loadingStarted is not defined", () => {
+      req.query.count = "3";
+
       simple.mock(twitter, "getUserTimeline").resolveWith({
         data: sampleTweets,
         quota: {}
@@ -393,6 +397,8 @@ describe("Timelines", () => {
       });
 
       it("should return tweets if Twitter API call is successful", () => {
+        req.query.count = "3";
+
         return timelines.handleGetTweetsRequest(req, res)
         .then(() => {
           assert(res.json.called);
@@ -446,6 +452,8 @@ describe("Timelines", () => {
       });
 
       it("should return tweets even if there's no username status stored", () => {
+        req.query.count = "3";
+
         simple.mock(cache, "getStatusFor").resolveWith(null);
 
         return timelines.handleGetTweetsRequest(req, res)
@@ -465,6 +473,7 @@ describe("Timelines", () => {
       });
 
       it("should transform username to lowercase", () => {
+        req.query.count = "3";
         req.query.username = "UPPERCASE";
 
         return timelines.handleGetTweetsRequest(req, res)
