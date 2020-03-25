@@ -5,6 +5,7 @@ const constants = require('../constants');
 const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
+const core = require('../core');
 const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
 
@@ -277,6 +278,36 @@ const handleGetTweetsRequest = (req, res) => {
   .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
 }
 
+const validatePresentationQueryParams = (req) => {
+  const {presentationId, componentId} = req.query;
+
+  if (!presentationId) {
+    return validationErrorFor("Presentation id was not provided");
+  }
+
+  if (!componentId) {
+    return validationErrorFor("Component id was not provided");
+  }
+
+  return Promise.resolve({...req.query});
+};
+
+const handleGetPresentationTweetsRequest = (req, res) => {
+  return validatePresentationQueryParams(req)
+  .then(params => {
+    const {presentationId, componentId} = params;
+
+    return core.getPresentation(presentationId, componentId);
+  })
+  .then(presentation => {
+    req.query = {...req.query, ...presentation};
+
+    return handleGetTweetsRequest(req, res);
+  })
+  .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
+}
+
 module.exports = {
-  handleGetTweetsRequest
+  handleGetTweetsRequest,
+  handleGetPresentationTweetsRequest
 };
