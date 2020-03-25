@@ -304,7 +304,15 @@ const handleGetPresentationTweetsRequest = (req, res) => {
 
     return handleGetTweetsRequest(req, res);
   })
-  .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
+  .catch(error => {
+    if (error.message === "Not Found") {
+      logAndSendError(res, error, NOT_FOUND_ERROR);
+    } else if (error.message && error.message.indexOf("was not provided") >= 0) {
+      logAndSendError(res, error, BAD_REQUEST_ERROR);
+    } else {
+      logAndSendError(res, error, SERVER_ERROR);
+    }
+  });
 }
 
 module.exports = {
