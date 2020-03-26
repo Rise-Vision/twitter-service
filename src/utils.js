@@ -1,4 +1,7 @@
+const nodeFetch = require("node-fetch");
+
 const currentTimestamp = () => Date.now();
+const validationErrorFor = message => Promise.reject(new Error(message));
 
 const deepClone = (obj) => {
   return JSON.parse(JSON.stringify(obj));
@@ -6,5 +9,7 @@ const deepClone = (obj) => {
 
 module.exports = {
   currentTimestamp,
-  deepClone
+  validationErrorFor,
+  deepClone,
+  fetch: nodeFetch
 };

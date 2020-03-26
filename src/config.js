@@ -14,5 +14,7 @@ module.exports = {
   retryLoadInSeconds: 30,
   numberOfCachedTweets: 100,
   redisCacheHostname: "ts-redis-master",
-  redisOtpHostname: "otp-redis-master"
+  redisOtpHostname: "otp-redis-master",
+
+  coreBaseUrl: "https://rvacore-test.appspot.com/_ah/api"
 };

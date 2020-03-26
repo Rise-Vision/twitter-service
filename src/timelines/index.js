@@ -5,36 +5,37 @@ const constants = require('../constants');
 const cache = require('../redis-cache/api');
 const oauthTokenProvider = require("../redis-otp/api");
 const twitter = require('../twitter');
+const core = require('../core');
 const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
+const utils = require('../utils');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
   NOT_FOUND_ERROR, SERVER_ERROR, SECONDS, PERCENT
 } = constants;
 
-const validationErrorFor = message => Promise.reject(new Error(message));
 const quotaLimitError = {message: "Quota limit reached."};
 
 const validateQueryParams = (req) => {
   const {companyId, count, username} = req.query;
 
   if (!companyId) {
-    return validationErrorFor("Company id was not provided");
+    return utils.validationErrorFor("Company id was not provided");
   }
 
   if (!username) {
-    return validationErrorFor("Username was not provided");
+    return utils.validationErrorFor("Username was not provided");
   }
 
   if (count && !(/^\d+$/).test(count)) {
-    return validationErrorFor(`'count' is not a valid integer value: ${count}`);
+    return utils.validationErrorFor(`'count' is not a valid integer value: ${count}`);
   }
 
   const countNumber = count ? Number(count) : config.defaultTweetCount;
 
   if (countNumber < 1 || countNumber > config.numberOfCachedTweets) {
-    return validationErrorFor(`'count' is out of range: ${countNumber}`);
+    return utils.validationErrorFor(`'count' is out of range: ${countNumber}`);
   }
 
   return Promise.resolve({
@@ -277,6 +278,44 @@ const handleGetTweetsRequest = (req, res) => {
   .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
 }
 
+const validatePresentationQueryParams = (req) => {
+  const {presentationId, componentId} = req.query;
+
+  if (!presentationId) {
+    return utils.validationErrorFor("Presentation id was not provided");
+  }
+
+  if (!componentId) {
+    return utils.validationErrorFor("Component id was not provided");
+  }
+
+  return Promise.resolve({...req.query});
+};
+
+const handleGetPresentationTweetsRequest = (req, res) => {
+  return validatePresentationQueryParams(req)
+  .then(params => {
+    const {presentationId, componentId} = params;
+
+    return core.getPresentation(presentationId, componentId);
+  })
+  .then(presentation => {
+    req.query = {...req.query, ...presentation};
+
+    return handleGetTweetsRequest(req, res);
+  })
+  .catch(error => {
+    if (error.message === "Not Found") {
+      logAndSendError(res, error, NOT_FOUND_ERROR);
+    } else if (error.message && error.message.indexOf("was not provided") >= 0) {
+      logAndSendError(res, error, BAD_REQUEST_ERROR);
+    } else {
+      logAndSendError(res, error, SERVER_ERROR);
+    }
+  });
+}
+
 module.exports = {
-  handleGetTweetsRequest
+  handleGetTweetsRequest,
+  handleGetPresentationTweetsRequest
 };

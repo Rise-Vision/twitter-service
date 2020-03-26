@@ -34,12 +34,13 @@
     "@google-cloud/storage": "^4.3.1",
     "body-parser": "^1.19.0",
     "express": "^4.17.1",
+    "node-fetch": "^2.6.0",
     "redis": "^3.0.2",
     "redis-promise": "git+https://github.com/Rise-Vision/redis-promise.git#1.2.0",
     "twitter": "^1.7.1"
   },
   "resolutions": {
     "acorn": "^7.1.1",
-    "minimist": "^1.2.2"
+    "minimist": "^1.2.3"
   }
 }

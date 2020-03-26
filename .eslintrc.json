@@ -7,10 +7,7 @@
     "extends": "eslint:recommended",
     "parserOptions": {
       "esversion": 6,
-      "ecmaVersion": 9,
-      "ecmaFeatures": {
-        "experimentalObjectRestSpread": true
-      }
+      "ecmaVersion": 2018
     },
     "rules": {
         "accessor-pairs": "error",
@@ -90,7 +87,7 @@
         "lines-between-class-members": "error",
         "max-depth": "error",
         "max-len": "off",
-        "max-lines": "error",
+        "max-lines": ["error", {"max": 500}],
         "max-nested-callbacks": "error",
         "max-params": "error",
         "max-statements": "error",
