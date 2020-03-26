@@ -1,8 +1,6 @@
 const config = require("../config");
 const utils = require("../utils");
 
-const validationErrorFor = message => Promise.reject(new Error(message));
-
 const loadPresentation = presentationId => {
   const url = `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}`;
 
@@ -19,7 +17,7 @@ const loadPresentation = presentationId => {
       return resp.items[0];
     }
 
-    throw new Error("Invalid response");
+    throw Error("Invalid response");
   });
 };
 
@@ -33,11 +31,11 @@ const getPresentation = (presentationId, componentId) => {
     const username = component ? component.username : null;
 
     if (!companyId) {
-      return validationErrorFor("Invalid companyId in Presentation");
+      return utils.validationErrorFor("Invalid companyId in Presentation");
     }
 
     if (!username) {
-      return validationErrorFor("Invalid username in Presentation");
+      return utils.validationErrorFor("Invalid username in Presentation");
     }
 
     return {companyId, username};

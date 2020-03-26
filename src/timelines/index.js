@@ -8,34 +8,34 @@ const twitter = require('../twitter');
 const core = require('../core');
 const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
+const utils = require('../utils');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
   NOT_FOUND_ERROR, SERVER_ERROR, SECONDS, PERCENT
 } = constants;
 
-const validationErrorFor = message => Promise.reject(new Error(message));
 const quotaLimitError = {message: "Quota limit reached."};
 
 const validateQueryParams = (req) => {
   const {companyId, count, username} = req.query;
 
   if (!companyId) {
-    return validationErrorFor("Company id was not provided");
+    return utils.validationErrorFor("Company id was not provided");
   }
 
   if (!username) {
-    return validationErrorFor("Username was not provided");
+    return utils.validationErrorFor("Username was not provided");
   }
 
   if (count && !(/^\d+$/).test(count)) {
-    return validationErrorFor(`'count' is not a valid integer value: ${count}`);
+    return utils.validationErrorFor(`'count' is not a valid integer value: ${count}`);
   }
 
   const countNumber = count ? Number(count) : config.defaultTweetCount;
 
   if (countNumber < 1 || countNumber > config.numberOfCachedTweets) {
-    return validationErrorFor(`'count' is out of range: ${countNumber}`);
+    return utils.validationErrorFor(`'count' is out of range: ${countNumber}`);
   }
 
   return Promise.resolve({
@@ -282,11 +282,11 @@ const validatePresentationQueryParams = (req) => {
   const {presentationId, componentId} = req.query;
 
   if (!presentationId) {
-    return validationErrorFor("Presentation id was not provided");
+    return utils.validationErrorFor("Presentation id was not provided");
   }
 
   if (!componentId) {
-    return validationErrorFor("Component id was not provided");
+    return utils.validationErrorFor("Component id was not provided");
   }
 
   return Promise.resolve({...req.query});
