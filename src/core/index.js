@@ -1,12 +1,12 @@
-const fetch = require("node-fetch");
 const config = require("../config");
+const utils = require("../utils");
 
 const validationErrorFor = message => Promise.reject(new Error(message));
 
 const loadPresentation = presentationId => {
   const url = `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}`;
 
-  return fetch(url)
+  return utils.fetch(url)
   .then(resp => {
     if (resp.ok) {
       return resp.json();

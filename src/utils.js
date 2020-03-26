@@ -1,3 +1,5 @@
+const nodeFetch = require("node-fetch");
+
 const currentTimestamp = () => Date.now();
 
 const deepClone = (obj) => {
@@ -6,5 +8,6 @@ const deepClone = (obj) => {
 
 module.exports = {
   currentTimestamp,
-  deepClone
+  deepClone,
+  fetch: nodeFetch
 };

@@ -536,4 +536,37 @@ describe("Timelines", () => {
       });
     });
   });
+
+  describe("handleGetPresentationTweetsRequest / validation", () => {
+    it("should reject if presentation id was not provided", () => {
+      req.query.presentationId = '';
+
+      return timelines.handleGetPresentationTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Presentation id was not provided");
+      });
+    });
+
+    it("should reject if componentId was not provided", () => {
+      req.query.presentationId = 'test';
+      req.query.componentId = '';
+
+      return timelines.handleGetPresentationTweetsRequest(req, res)
+      .then(() => {
+        assert(!res.json.called);
+
+        assert(res.status.called);
+        assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+        assert(res.send.called);
+        assert.equal(res.send.lastCall.args[0], "Component id was not provided");
+      });
+    });
+  });
 });
