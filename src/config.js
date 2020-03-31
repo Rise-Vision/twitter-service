@@ -1,6 +1,10 @@
 /* eslint-disable no-magic-numbers */
 
-const {HOURS, MINUTES} = require('./constants');
+const {HOURS, MINUTES} = require("./constants");
+
+const testServer = "rvacore-test";
+const prodServer = "rvaserver2";
+const currentServer = process.env.NODE_ENV === "test" ? testServer : prodServer;
 
 module.exports = {
   defaultPort: 80,
@@ -16,5 +20,5 @@ module.exports = {
   redisCacheHostname: "ts-redis-master",
   redisOtpHostname: "otp-redis-master",
 
-  coreBaseUrl: "https://rvacore-test.appspot.com/_ah/api"
+  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`
 };

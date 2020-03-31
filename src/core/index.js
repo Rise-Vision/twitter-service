@@ -1,7 +1,11 @@
+const cache = require('../redis-cache/api');
+
 const config = require("../config");
 const utils = require("../utils");
 
-const loadPresentation = presentationId => {
+const computeHash = (presentationId, componentId, username) => utils.hash(presentationId + componentId + username);
+
+const loadPresentation = (presentationId, componentId) => {
   const url = `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}`;
 
   return utils.fetch(url)
@@ -18,27 +22,86 @@ const loadPresentation = presentationId => {
     }
 
     throw Error("Invalid response");
+  })
+  .then(presentation => {
+    return processPresentation(presentation, componentId);
   });
 };
 
-const getPresentation = (presentationId, componentId) => {
-  return loadPresentation(presentationId)
+const extractPresentationData = (presentation, componentId) => {
+  const companyId = presentation.companyId;
+  const data = JSON.parse(presentation.templateAttributeData || "{}");
+  const components = data.components || [];
+  const component = components.find(comp => comp.id === componentId);
+  const username = component ? component.username : null;
+  const hash = computeHash(presentation.id, componentId, username);
+
+  return {companyId, username, hash};
+};
+
+const processPresentation = (presentation, componentId) => {
+  const {companyId, username} = extractPresentationData(presentation, componentId);
+
+  if (!companyId) {
+    return utils.validationErrorFor("Invalid companyId in Presentation");
+  }
+
+  if (!username) {
+    return utils.validationErrorFor("Invalid username in Presentation");
+  }
+
+  return {companyId, username};
+};
+
+const getCachedPresentationData = (presentationId, componentId) => {
+  return cache.getCompanyIdFor(presentationId)
+  .catch(err => console.log("companyId cache get failed", err))
+  .then(companyId => {
+    return cache.getUsernameFor(presentationId, componentId)
+    .catch(err => console.log("username cache get failed", err))
+    .then(username => {
+      if (companyId && username) {
+        const hash = computeHash(presentationId, componentId, username);
+
+        return {companyId, username, hash, cached: true};
+      }
+
+      throw Error();
+    });
+  });
+};
+
+const saveCachedPresentationData = (presentationId, componentId, companyId, username) => {
+  return cache.saveCompanyId(presentationId, companyId)
+  .then(() => {
+    return cache.saveUsername(presentationId, componentId, username);
+  })
+  .catch(err => {
+    console.log("Failed to save Presentation cache", err);
+  });
+};
+
+const getPresentation = (presentationId, componentId, userHash) => {
+  return getCachedPresentationData(presentationId, componentId, userHash)
+  .then(cachedPresentation => {
+    if (cachedPresentation.hash === userHash) {
+      return cachedPresentation;
+    }
+
+    throw Error();
+  })
+  .catch(() => {
+    return loadPresentation(presentationId, componentId);
+  })
   .then(presentation => {
-    const companyId = presentation.companyId;
-    const data = JSON.parse(presentation.templateAttributeData || "{}");
-    const components = data.components || [];
-    const component = components.find(comp => comp.id === componentId);
-    const username = component ? component.username : null;
+    const {companyId, username} = presentation;
 
-    if (!companyId) {
-      return utils.validationErrorFor("Invalid companyId in Presentation");
+    if (!presentation.cached) {
+      return saveCachedPresentationData(presentationId, componentId, companyId, username)
+      .then(() => presentation);
     }
 
-    if (!username) {
-      return utils.validationErrorFor("Invalid username in Presentation");
-    }
-
-    return {companyId, username};
+    return presentation;
   });
 };
 
