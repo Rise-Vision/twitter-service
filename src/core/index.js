@@ -71,7 +71,7 @@ const getCachedPresentationData = (presentationId, componentId) => {
   });
 };
 
-const saveCachedPresentationData = (presentationId, componentId, companyId, username) => {
+const saveCachedPresentationData = (presentationId, componentId, companyId, username) => { // eslint-disable-line max-params
   return cache.saveCompanyId(presentationId, companyId)
   .then(() => {
     return cache.saveUsername(presentationId, componentId, username);
