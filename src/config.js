@@ -1,10 +1,12 @@
-/* eslint-disable no-magic-numbers */
+/* eslint-disable no-magic-numbers, no-warning-comments */
 
 const {HOURS, MINUTES} = require("./constants");
 
 const testServer = "rvacore-test";
-const prodServer = "rvaserver2";
-const currentServer = process.env.NODE_ENV === "test" ? testServer : prodServer;
+// const prodServer = "rvaserver2";
+
+// TODO: Until we setup production deployment, force using test server so we don't rely on NODE_ENV yet and cause issues with redis connections
+const currentServer = testServer;
 
 module.exports = {
   defaultPort: 80,
