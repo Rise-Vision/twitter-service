@@ -66,7 +66,7 @@ jobs:
       - setup_remote_docker
       - run: docker load < ./dockerImage.tar
       - run: gcloud docker -- push ${DOCKER_IMAGE_NAME}
-      - run: kubectl patch deployment twitter-service -p '{"spec":{"template":{"spec":{"containers":[{"name":"twitter-service","image":"'"$DOCKER_IMAGE_NAME"':'"${CIRCLE_SHA1}"'"}]}}}}'
+      - run: kubectl patch deployment twitter-service -p '{"spec":{"template":{"spec":{"containers":[{"name":"twitter-service","image":"'"$DOCKER_IMAGE_NAME"':'"${CIRCLE_SHA1}"'","env":[{"name":"NODE_ENV","value":"ignore"}]}]}}}}'
 
   deploy-production:
     docker: *DOCKERIMAGE

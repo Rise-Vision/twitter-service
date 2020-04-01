@@ -1,6 +1,12 @@
-/* eslint-disable no-magic-numbers */
+/* eslint-disable no-magic-numbers, no-warning-comments */
 
-const {HOURS, MINUTES} = require('./constants');
+const {HOURS, MINUTES} = require("./constants");
+
+const testServer = "rvacore-test";
+// const prodServer = "rvaserver2";
+
+// TODO: Until we setup production deployment, force using test server so we don't rely on NODE_ENV yet and cause issues with redis connections
+const currentServer = testServer;
 
 module.exports = {
   defaultPort: 80,
@@ -16,5 +22,5 @@ module.exports = {
   redisCacheHostname: "ts-redis-master",
   redisOtpHostname: "otp-redis-master",
 
-  coreBaseUrl: "https://rvacore-test.appspot.com/_ah/api"
+  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`
 };
