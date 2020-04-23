@@ -279,7 +279,7 @@ const handleGetTweetsRequest = (req, res) => {
 }
 
 const validatePresentationQueryParams = (req) => {
-  const {presentationId, componentId, hash} = req.query;
+  const {presentationId, componentId, hash, useDraft} = req.query;
 
   if (!presentationId) {
     return utils.validationErrorFor("Presentation id was not provided");
@@ -293,15 +293,19 @@ const validatePresentationQueryParams = (req) => {
     return utils.validationErrorFor("Hash was not provided");
   }
 
+  if (!useDraft) {
+    return utils.validationErrorFor("Use Draft was not provided");
+  }
+
   return Promise.resolve({...req.query});
 };
 
 const handleGetPresentationTweetsRequest = (req, res) => {
   return validatePresentationQueryParams(req)
   .then(params => {
-    const {presentationId, componentId, hash} = params;
+    const {presentationId, componentId, hash, useDraft} = params;
 
-    return core.getPresentation(presentationId, componentId, hash);
+    return core.getPresentation(presentationId, componentId, hash, useDraft);
   })
   .then(presentation => {
     req.query = {...req.query, ...presentation};

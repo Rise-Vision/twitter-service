@@ -11,6 +11,7 @@ describe("Core", () => {
   const companyId = "testCompanyId";
   const presentationId = "testPresentationId";
   const componentId = "testComponentId";
+  const useDraft = false;
 
   beforeEach(() => {
     config.coreBaseUrl = "https://rvacore-test.appspot.com/_ah/api";
@@ -37,9 +38,9 @@ describe("Core", () => {
         ]})
       });
 
-      core.getPresentation(presentationId, componentId)
+      core.getPresentation(presentationId, componentId, null, useDraft)
       .then(presentation => {
-        assert.equal(utils.fetch.lastCall.args[0], `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}`);
+        assert.equal(utils.fetch.lastCall.args[0], `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}&useDraft=false`);
         assert.equal(presentation.companyId, companyId);
         assert.equal(presentation.username, "cnn");
 
@@ -57,7 +58,7 @@ describe("Core", () => {
         statusText: "Not Found"
       });
 
-      core.getPresentation(presentationId, componentId)
+      core.getPresentation(presentationId, componentId, null, useDraft)
       .catch(err => {
         assert.equal(err.message, "Not Found");
         done();
@@ -70,7 +71,7 @@ describe("Core", () => {
         json: () => ({items: []})
       });
 
-      core.getPresentation(presentationId, componentId)
+      core.getPresentation(presentationId, componentId, null, useDraft)
       .catch(err => {
         assert.equal(err.message, "Invalid response");
         done();
@@ -83,20 +84,7 @@ describe("Core", () => {
         json: () => ({items: [{}]})
       });
 
-      core.getPresentation(presentationId, componentId)
-      .catch(err => {
-        assert.equal(err.message, "Invalid companyId in Presentation");
-        done();
-      })
-    });
-
-    it("should reject if presentation data is not complete", (done) => {
-      simple.mock(utils, "fetch").resolveWith({
-        ok: true,
-        json: () => ({items: [{}]})
-      });
-
-      core.getPresentation(presentationId, componentId)
+      core.getPresentation(presentationId, componentId, null, useDraft)
       .catch(err => {
         assert.equal(err.message, "Invalid companyId in Presentation");
         done();

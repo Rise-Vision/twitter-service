@@ -1,3 +1,5 @@
+/* eslint-disable no-warning-comments */
+
 const cache = require('../redis-cache/api');
 
 const config = require("../config");
@@ -5,8 +7,8 @@ const utils = require("../utils");
 
 const computeHash = (presentationId, componentId, username) => utils.hash(presentationId + componentId + username);
 
-const loadPresentation = (presentationId, componentId) => {
-  const url = `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}`;
+const loadPresentation = (presentationId, componentId, useDraft) => {
+  const url = `${config.coreBaseUrl}/content/v0/presentation?id=${presentationId}&useDraft=${useDraft}`;
 
   return utils.fetch(url)
   .then(resp => {
@@ -31,6 +33,7 @@ const loadPresentation = (presentationId, componentId) => {
 const extractPresentationData = (presentation, componentId) => {
   const companyId = presentation.companyId;
   const data = JSON.parse(presentation.templateAttributeData || "{}");
+  // TODO: account for empty {} by loading template blueprint
   const components = data.components || [];
   const component = components.find(comp => comp.id === componentId);
   const username = component ? component.username : null;
@@ -71,7 +74,7 @@ const getCachedPresentationData = (presentationId, componentId) => {
   });
 };
 
-const saveCachedPresentationData = (presentationId, componentId, companyId, username) => { // eslint-disable-line max-params
+const saveCachedPresentationData = (presentationId, componentId, companyId, username) => {
   return cache.saveCompanyId(presentationId, companyId)
   .then(() => {
     return cache.saveUsername(presentationId, componentId, username);
@@ -81,7 +84,7 @@ const saveCachedPresentationData = (presentationId, componentId, companyId, user
   });
 };
 
-const getPresentation = (presentationId, componentId, userHash) => {
+const getPresentation = (presentationId, componentId, userHash, useDraft) => {
   return getCachedPresentationData(presentationId, componentId, userHash)
   .then(cachedPresentation => {
     if (cachedPresentation.hash === userHash) {
@@ -91,7 +94,7 @@ const getPresentation = (presentationId, componentId, userHash) => {
     throw Error();
   })
   .catch(() => {
-    return loadPresentation(presentationId, componentId);
+    return loadPresentation(presentationId, componentId, useDraft);
   })
   .then(presentation => {
     const {companyId, username} = presentation;
