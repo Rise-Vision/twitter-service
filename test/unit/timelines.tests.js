@@ -568,5 +568,39 @@ describe("Timelines", () => {
         assert.equal(res.send.lastCall.args[0], "Component id was not provided");
       });
     });
+
+    it("should reject if hash was not provided", () => {
+      req.query.presentationId = 'test';
+      req.query.componentId = 'test';
+      req.query.hash = '';
+
+      return timelines.handleGetPresentationTweetsRequest(req, res)
+        .then(() => {
+          assert(!res.json.called);
+
+          assert(res.status.called);
+          assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+          assert(res.send.called);
+          assert.equal(res.send.lastCall.args[0], "Hash was not provided");
+        });
+    });
+
+    it("should reject if useDraft was not provided", () => {
+      req.query.presentationId = 'test';
+      req.query.componentId = 'test';
+      req.query.hash = 'test';
+
+      return timelines.handleGetPresentationTweetsRequest(req, res)
+        .then(() => {
+          assert(!res.json.called);
+
+          assert(res.status.called);
+          assert.equal(res.status.lastCall.args[0], BAD_REQUEST_ERROR);
+
+          assert(res.send.called);
+          assert.equal(res.send.lastCall.args[0], "Use Draft was not provided");
+        });
+    });
   });
 });
