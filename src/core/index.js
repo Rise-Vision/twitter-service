@@ -1,7 +1,7 @@
 /* eslint-disable no-warning-comments */
 
 const cache = require('../redis-cache/api');
-
+const blueprint = require('../blueprint')
 const config = require("../config");
 const utils = require("../utils");
 
@@ -33,13 +33,11 @@ const loadPresentation = (presentationId, componentId, useDraft) => {
 const extractPresentationData = (presentation, componentId) => {
   const companyId = presentation.companyId;
   const data = JSON.parse(presentation.templateAttributeData || "{}");
-  // TODO: account for empty {} by loading template blueprint
   const components = data.components || [];
   const component = components.find(comp => comp.id === componentId);
   const username = component ? component.username : null;
-  const hash = computeHash(presentation.id, componentId, username);
 
-  return {companyId, username, hash};
+  return {companyId, username};
 };
 
 const processPresentation = (presentation, componentId) => {
@@ -50,7 +48,16 @@ const processPresentation = (presentation, componentId) => {
   }
 
   if (!username) {
-    return utils.validationErrorFor("Invalid username in Presentation");
+    return blueprint.load(presentation.productCode)
+      .then(blueprintData => {
+        const blueprintUsername = blueprint.extractUsername(blueprintData, componentId);
+
+        if (!blueprintUsername) {
+          return utils.validationErrorFor("Invalid username in Presentation");
+        }
+
+        return {companyId, username: blueprintUsername};
+      });
   }
 
   return {companyId, username};

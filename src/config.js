@@ -5,6 +5,9 @@ const {HOURS, MINUTES} = require("./constants");
 const testServer = "rvacore-test";
 // const prodServer = "rvaserver2";
 
+// TODO: configure conditionally when NODE_ENV variables finalized
+const blueprintStage = "staging";
+
 // TODO: Until we setup production deployment, force using test server so we don't rely on NODE_ENV yet and cause issues with redis connections
 const currentServer = testServer;
 
@@ -22,5 +25,7 @@ module.exports = {
   redisCacheHostname: "ts-redis-master",
   redisOtpHostname: "otp-redis-master",
 
-  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`
+  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`,
+
+  coreBlueprintUrl: `https://widgets.risevision.com/${blueprintStage}/templates/PRODUCT_CODE/blueprint.json`
 };
