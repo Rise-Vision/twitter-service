@@ -4,17 +4,22 @@ const simple = require("simple-mock");
 
 const config = require("../../src/config");
 const utils = require("../../src/utils");
+const blueprint = require("../../src/blueprint");
 const core = require("../../src/core");
 const cache = require("../../src/redis-cache/api");
+
+const sampleBlueprint = require("./samples/blueprint").data;
 
 describe("Core", () => {
   const companyId = "testCompanyId";
   const presentationId = "testPresentationId";
-  const componentId = "testComponentId";
+  const componentId = "rise-data-twitter-01";
   const useDraft = false;
+  const productCode = "abc123";
 
   beforeEach(() => {
     config.coreBaseUrl = "https://rvacore-test.appspot.com/_ah/api";
+    config.coreBlueprintUrl = "https://widgets.risevision.com/staging/templates/PRODUCT_CODE/blueprint.json";
 
     simple.mock(cache, "getCompanyIdFor").resolveWith();
     simple.mock(cache, "getUsernameFor").resolveWith();
@@ -33,6 +38,7 @@ describe("Core", () => {
         json: () => ({items: [
         {
           companyId,
+          productCode,
           templateAttributeData: `{"components":[{"id":"${componentId}","username":"cnn","maxitems":10}]}`
         }
         ]})
@@ -89,6 +95,35 @@ describe("Core", () => {
         assert.equal(err.message, "Invalid companyId in Presentation");
         done();
       })
+    });
+
+    it("should load template blueprint if template data is empty in core presentation data", (done) => {
+      simple.mock(utils, "fetch").resolveWith({
+        ok: true,
+        json: () => ({items: [
+            {
+              companyId,
+              productCode,
+              templateAttributeData: "{}"
+            }
+          ]})
+      });
+
+      simple.mock(blueprint, "load").resolveWith(sampleBlueprint);
+
+      core.getPresentation(presentationId, componentId, null, useDraft)
+        .then(presentation => {
+
+          assert.equal(presentation.companyId, companyId);
+          assert.equal(presentation.username, "cnn");
+
+          assert(cache.getCompanyIdFor.called);
+          assert.equal(cache.saveCompanyId.lastCall.args[1], companyId);
+          assert.equal(cache.saveUsername.lastCall.args[2], "cnn");
+
+          done();
+
+        })
     });
 
     describe("cache", () => {
