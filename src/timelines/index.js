@@ -324,5 +324,6 @@ const handleGetPresentationTweetsRequest = (req, res) => {
 }
 
 module.exports = {
+  handleGetTweetsRequest,
   handleGetPresentationTweetsRequest
 };
