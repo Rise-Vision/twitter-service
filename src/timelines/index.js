@@ -312,7 +312,7 @@ const validateEncryptedQueryParams = (req) => {
   }
 
   if (!username) {
-    return utils.validationErrorFor("Encrypted username was not provided");
+    return utils.validationErrorFor("Username was not provided");
   }
 
   return Promise.resolve({...req.query});
