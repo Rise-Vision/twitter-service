@@ -26,6 +26,12 @@ const loadPresentationWithoutDraft = (presentationId) => {
       throw Error("Invalid response");
     })
     .then(presentation => {
+      const companyId = presentation.companyId;
+
+      if (!companyId) {
+        return utils.validationErrorFor("Invalid companyId in Presentation");
+      }
+
       return {companyId: presentation.companyId};
     });
 };
