@@ -300,6 +300,24 @@ const validatePresentationQueryParams = (req) => {
   return Promise.resolve({...req.query});
 };
 
+const validateEncryptedQueryParams = (req) => {
+  const {presentationId, componentId, username} = req.query;
+
+  if (!presentationId) {
+    return utils.validationErrorFor("Presentation id was not provided");
+  }
+
+  if (!componentId) {
+    return utils.validationErrorFor("Component id was not provided");
+  }
+
+  if (!username) {
+    return utils.validationErrorFor("Username was not provided");
+  }
+
+  return Promise.resolve({...req.query});
+};
+
 const handleGetPresentationTweetsRequest = (req, res) => {
   return validatePresentationQueryParams(req)
   .then(params => {
@@ -323,7 +341,33 @@ const handleGetPresentationTweetsRequest = (req, res) => {
   });
 }
 
+const handleGetTweetsEncryptedRequest = (req, res) => {
+  return validateEncryptedQueryParams(req)
+    .then(params => {
+      const {presentationId, componentId, username} = params;
+
+      // TODO: decrypt username
+
+      return core.getPresentationWithoutHash(presentationId, componentId, username);
+    })
+    .then(presentation => {
+      req.query = {...req.query, ...presentation};
+
+      return handleGetTweetsRequest(req, res);
+    })
+    .catch(error => {
+      if (error.message === "Not Found") {
+        logAndSendError(res, error, NOT_FOUND_ERROR);
+      } else if (error.message && error.message.indexOf("was not provided") >= 0) {
+        logAndSendError(res, error, BAD_REQUEST_ERROR);
+      } else {
+        logAndSendError(res, error, SERVER_ERROR);
+      }
+    });
+}
+
 module.exports = {
   handleGetTweetsRequest,
+  handleGetTweetsEncryptedRequest,
   handleGetPresentationTweetsRequest
 };
