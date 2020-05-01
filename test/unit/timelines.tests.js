@@ -11,9 +11,11 @@ const timelines = require("../../src/timelines");
 const formatter = require("../../src/timelines/data_formatter");
 const twitter = require("../../src/twitter");
 const utils = require("../../src/utils");
+const mockData = require("../../src/timelines/mock-data");
 
 const sample30Tweets = require("./samples/tweets-30").data;
 const sampleTweets = require("./samples/tweets-timeline").data;
+const mockDataTweets = mockData.tweets();
 
 const sampleTweetsFormatted = formatter.getTimelineFormatted(sampleTweets);
 
@@ -52,6 +54,20 @@ describe("Timelines", () => {
 
   afterEach(() => {
     simple.restore();
+  });
+
+  describe("handleDemoTweetsRequest", () => {
+    it("should return mock data", () => {
+      timelines.handleDemoTweetsRequest(res);
+
+      assert(res.json.called);
+      assert.deepEqual(res.json.lastCall.args[0], {
+        tweets: mockDataTweets
+      });
+
+      assert(!res.status.called);
+      assert(!res.send.called);
+    });
   });
 
   describe("handleGetTweetsRequest / validation", () => {
@@ -653,4 +669,5 @@ describe("Timelines", () => {
         });
     });
   });
+
 });

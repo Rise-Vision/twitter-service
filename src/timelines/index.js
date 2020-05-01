@@ -9,6 +9,7 @@ const core = require('../core');
 const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
 const utils = require('../utils');
+const mockData = require('./mock-data');
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
@@ -278,6 +279,14 @@ const handleGetTweetsRequest = (req, res) => {
   .catch(error => logAndSendError(res, error, BAD_REQUEST_ERROR));
 }
 
+const handleDemoTweetsRequest = (res) => {
+  const tweets = mockData.tweets().slice();
+
+  res.json({
+    tweets
+  });
+}
+
 const validatePresentationQueryParams = (req) => {
   const {presentationId, componentId, hash, useDraft} = req.query;
 
@@ -346,11 +355,20 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
     .then(params => {
       const {presentationId, componentId, username} = params;
 
+      // for rise-data-twitter e2e purposes and creative local development purposes
+      if (presentationId === "demo") {
+        return {companyId: "demo"}
+      }
+
       // TODO: decrypt username
 
       return core.getPresentationWithoutHash(presentationId, componentId, username);
     })
     .then(presentation => {
+      if (presentation.companyId && presentation.companyId === "demo") {
+        return handleDemoTweetsRequest(res);
+      }
+
       req.query = {...req.query, ...presentation};
 
       return handleGetTweetsRequest(req, res);
@@ -367,6 +385,7 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
 }
 
 module.exports = {
+  handleDemoTweetsRequest,
   handleGetTweetsRequest,
   handleGetTweetsEncryptedRequest,
   handleGetPresentationTweetsRequest
