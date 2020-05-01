@@ -282,8 +282,6 @@ const handleGetTweetsRequest = (req, res) => {
 const handleDemoTweetsRequest = (res) => {
   const tweets = mockData.tweets().slice();
 
-  res.header("Cache-control", `private, max-age=0`);
-
   res.json({
     tweets
   });
@@ -367,7 +365,7 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
       return core.getPresentationWithoutHash(presentationId, componentId, username);
     })
     .then(presentation => {
-      if (presentation.companyId === "demo") {
+      if (presentation.companyId && presentation.companyId === "demo") {
         return handleDemoTweetsRequest(res);
       }
 
