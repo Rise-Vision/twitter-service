@@ -39,6 +39,10 @@ jobs:
           name: update_twitter_credentials
           command: |
             cp ../private-keys/twitter/twitter-app-credentials.js src/twitter
+      - run:
+          name: update_twitter_service_private_key
+          command: |
+            cp ../private-keys/twitter-service/private-key.js src/timelines
       - setup_remote_docker
       - run: docker build -t $DOCKER_IMAGE_NAME:${CIRCLE_SHA1} .
       - run: docker images

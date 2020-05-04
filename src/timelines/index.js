@@ -10,6 +10,12 @@ const {currentTimestamp} = require('../utils');
 const formatter = require('./data_formatter');
 const utils = require('../utils');
 const mockData = require('./mock-data');
+const privateKey = require('./private-key');
+
+// JSEncrypt needs navigator and window objects.
+global.navigator = {appName: 'nodejs'};
+global.window = {};
+const JSEncrypt = require('jsencrypt').default;
 
 const {
   BAD_REQUEST_ERROR, CONFLICT_ERROR, CONFLICT_ERROR_MESSAGE, FORBIDDEN_ERROR,
@@ -327,6 +333,13 @@ const validateEncryptedQueryParams = (req) => {
   return Promise.resolve({...req.query});
 };
 
+const decryptParam = (value) => {
+  const jsEncrypt = new JSEncrypt();
+
+  jsEncrypt.setPrivateKey(privateKey.get());
+  return jsEncrypt.decrypt(value);
+}
+
 const handleGetPresentationTweetsRequest = (req, res) => {
   return validatePresentationQueryParams(req)
   .then(params => {
@@ -360,8 +373,6 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
         return {companyId: "demo"}
       }
 
-      // TODO: decrypt username
-
       return core.getPresentationWithoutHash(presentationId, componentId, username);
     })
     .then(presentation => {
@@ -384,9 +395,45 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
     });
 }
 
+const handleGetTweetsSecureEncryptedRequest = (req, res) => {
+  return validateEncryptedQueryParams(req)
+    .then(params => {
+      const {presentationId, componentId, username} = params;
+
+      // for rise-data-twitter e2e purposes and creative local development purposes
+      if (presentationId === "demo") {
+        return {companyId: "demo"}
+      }
+
+      const decryptedUsername = decryptParam(username);
+
+      return core.getPresentationWithoutHash(presentationId, componentId, decryptedUsername);
+    })
+    .then(presentation => {
+      if (presentation.companyId && presentation.companyId === "demo") {
+        return handleDemoTweetsRequest(res);
+      }
+
+      req.query = {...req.query, ...presentation};
+
+      return handleGetTweetsRequest(req, res);
+    })
+    .catch(error => {
+      if (error.message === "Not Found") {
+        logAndSendError(res, error, NOT_FOUND_ERROR);
+      } else if (error.message && error.message.indexOf("was not provided") >= 0) {
+        logAndSendError(res, error, BAD_REQUEST_ERROR);
+      } else {
+        logAndSendError(res, error, SERVER_ERROR);
+      }
+    });
+}
+
+
 module.exports = {
   handleDemoTweetsRequest,
   handleGetTweetsRequest,
   handleGetTweetsEncryptedRequest,
+  handleGetTweetsSecureEncryptedRequest,
   handleGetPresentationTweetsRequest
 };
