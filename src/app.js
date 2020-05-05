@@ -23,8 +23,7 @@ app.get('/twitter', function(req, res) {
 
 app.get("/twitter/verify-credentials", credentials.handleVerifyCredentialsRequest);
 app.get("/twitter/get-presentation-tweets", timelines.handleGetPresentationTweetsRequest);
-app.get("/twitter/get-tweets", timelines.handleGetTweetsEncryptedRequest);
-app.get("/twitter/get-tweets-secure", timelines.handleGetTweetsSecureEncryptedRequest);
+app.get("/twitter/get-tweets-secure", timelines.handleGetTweetsEncryptedRequest);
 
 const start = ()=>{
   server.listen(port, (err) => {

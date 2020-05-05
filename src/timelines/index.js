@@ -373,38 +373,6 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
         return {companyId: "demo"}
       }
 
-      return core.getPresentationWithoutHash(presentationId, componentId, username);
-    })
-    .then(presentation => {
-      if (presentation.companyId && presentation.companyId === "demo") {
-        return handleDemoTweetsRequest(res);
-      }
-
-      req.query = {...req.query, ...presentation};
-
-      return handleGetTweetsRequest(req, res);
-    })
-    .catch(error => {
-      if (error.message === "Not Found") {
-        logAndSendError(res, error, NOT_FOUND_ERROR);
-      } else if (error.message && error.message.indexOf("was not provided") >= 0) {
-        logAndSendError(res, error, BAD_REQUEST_ERROR);
-      } else {
-        logAndSendError(res, error, SERVER_ERROR);
-      }
-    });
-}
-
-const handleGetTweetsSecureEncryptedRequest = (req, res) => {
-  return validateEncryptedQueryParams(req)
-    .then(params => {
-      const {presentationId, componentId, username} = params;
-
-      // for rise-data-twitter e2e purposes and creative local development purposes
-      if (presentationId === "demo") {
-        return {companyId: "demo"}
-      }
-
       const decryptedUsername = decryptParam(username);
 
       return core.getPresentationWithoutHash(presentationId, componentId, decryptedUsername);
@@ -434,6 +402,5 @@ module.exports = {
   handleDemoTweetsRequest,
   handleGetTweetsRequest,
   handleGetTweetsEncryptedRequest,
-  handleGetTweetsSecureEncryptedRequest,
   handleGetPresentationTweetsRequest
 };
