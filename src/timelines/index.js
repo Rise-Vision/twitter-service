@@ -293,28 +293,6 @@ const handleDemoTweetsRequest = (res) => {
   });
 }
 
-const validatePresentationQueryParams = (req) => {
-  const {presentationId, componentId, hash, useDraft} = req.query;
-
-  if (!presentationId) {
-    return utils.validationErrorFor("Presentation id was not provided");
-  }
-
-  if (!componentId) {
-    return utils.validationErrorFor("Component id was not provided");
-  }
-
-  if (!hash) {
-    return utils.validationErrorFor("Hash was not provided");
-  }
-
-  if (!useDraft) {
-    return utils.validationErrorFor("Use Draft was not provided");
-  }
-
-  return Promise.resolve({...req.query});
-};
-
 const validateEncryptedQueryParams = (req) => {
   const {presentationId, componentId, username} = req.query;
 
@@ -340,29 +318,6 @@ const decryptParam = (value) => {
   return jsEncrypt.decrypt(value);
 }
 
-const handleGetPresentationTweetsRequest = (req, res) => {
-  return validatePresentationQueryParams(req)
-  .then(params => {
-    const {presentationId, componentId, hash, useDraft} = params;
-
-    return core.getPresentation(presentationId, componentId, hash, useDraft);
-  })
-  .then(presentation => {
-    req.query = {...req.query, ...presentation};
-
-    return handleGetTweetsRequest(req, res);
-  })
-  .catch(error => {
-    if (error.message === "Not Found") {
-      logAndSendError(res, error, NOT_FOUND_ERROR);
-    } else if (error.message && error.message.indexOf("was not provided") >= 0) {
-      logAndSendError(res, error, BAD_REQUEST_ERROR);
-    } else {
-      logAndSendError(res, error, SERVER_ERROR);
-    }
-  });
-}
-
 const handleGetTweetsEncryptedRequest = (req, res) => {
   return validateEncryptedQueryParams(req)
     .then(params => {
@@ -375,7 +330,7 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
 
       const decryptedUsername = decryptParam(username);
 
-      return core.getPresentationWithoutHash(presentationId, componentId, decryptedUsername);
+      return core.getPresentation(presentationId, componentId, decryptedUsername);
     })
     .then(presentation => {
       if (presentation.companyId && presentation.companyId === "demo") {
@@ -401,6 +356,5 @@ const handleGetTweetsEncryptedRequest = (req, res) => {
 module.exports = {
   handleDemoTweetsRequest,
   handleGetTweetsRequest,
-  handleGetTweetsEncryptedRequest,
-  handleGetPresentationTweetsRequest
+  handleGetTweetsEncryptedRequest
 };
