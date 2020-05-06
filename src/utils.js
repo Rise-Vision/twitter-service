@@ -1,4 +1,3 @@
-const hash = require("object-hash");
 const nodeFetch = require("node-fetch");
 
 const currentTimestamp = () => Date.now();
@@ -12,6 +11,5 @@ module.exports = {
   currentTimestamp,
   validationErrorFor,
   deepClone,
-  hash,
   fetch: nodeFetch
 };
