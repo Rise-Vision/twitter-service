@@ -6,7 +6,7 @@
   "scripts": {
     "preinstall": "npx npm-force-resolutions || true",
     "test": "eslint . && mocha -t 20000 -r test/mocha-env.js test/unit/** test/integration/**",
-    "dev": "TS_PORT=8080 NODE_ENV=test nodemon index.js",
+    "dev": "TS_PORT=8080 NODE_ENV=dev nodemon index.js",
     "start": "node index.js"
   },
   "repository": {
