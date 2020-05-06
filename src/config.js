@@ -21,5 +21,5 @@ module.exports = {
   redisCacheHostname: "ts-redis-master",
   redisOtpHostname: "otp-redis-master",
 
-  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`,
+  coreBaseUrl: `https://${currentServer}.appspot.com/_ah/api`
 };
