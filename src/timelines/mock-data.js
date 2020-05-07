@@ -5,7 +5,24 @@ const tweets = () => {
       "images": [],
       "name": "Rise Vision",
       "profilePicture": "https://pbs.twimg.com/profile_images/1218249445676126215/8Y-ewcXg_normal.png",
-      "quoted": null,
+      "quoted": {
+        "createdAt": "Mon Apr 27 13:48:07 +0000 2020",
+        "images": [],
+        "name": "Donald J. Trump",
+        "profilePicture": "https://pbs.twimg.com/profile_images/874276197357596672/kUuht00m_normal.jpg",
+        "quoted": null,
+        "screenName": "realDonaldTrump",
+        "statistics": {
+          "likeCount": 384831,
+          "retweetCount": 79219
+        },
+        "text": "FAKE NEWS, THE ENEMY OF THE PEOPLE!",
+        "user": {
+          "description": "45th President of the United States of America🇺🇸",
+          "followers": 78921673,
+          "statuses": 51028
+        }
+      },
       "screenName": "RiseVision",
       "statistics": {
         "likeCount": 0,
