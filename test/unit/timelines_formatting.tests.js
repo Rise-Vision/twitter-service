@@ -87,7 +87,7 @@ describe("Timelines Data Formatting", () => {
 
       assert.equal(formatted[0].name, sampleTweets[0].user.name);
       assert.equal(formatted[0].screenName, sampleTweets[0].user.screen_name);
-      assert.equal(formatted[0].profilePicture, sampleTweets[0].user.profile_image_url_https);
+      assert.equal(formatted[0].profilePicture, "https://pbs.twimg.com/profile_images/1145679135873933312/OF0s1_Pe.png");
       assert.equal(formatted[0].createdAt, sampleTweets[0].created_at);
       assert.equal(formatted[0].text, sampleTweets[0].full_text);
       assert.deepEqual(formatted[0].images, ["https://pbs.twimg.com/media/ERpd155WAAIbGuw?format=jpg&name=large"]);
@@ -199,7 +199,7 @@ describe("Timelines Data Formatting", () => {
 
       assert.equal(formatted[2].quoted.name, sampleTweets[2].quoted_status.user.name);
       assert.equal(formatted[2].quoted.screenName, sampleTweets[2].quoted_status.user.screen_name);
-      assert.equal(formatted[2].quoted.profilePicture, sampleTweets[2].quoted_status.user.profile_image_url_https);
+      assert.equal(formatted[2].quoted.profilePicture, "https://pbs.twimg.com/profile_images/1197533022263877635/JxM1Ba0d.jpg");
       assert.equal(formatted[2].quoted.createdAt, sampleTweets[2].quoted_status.created_at);
       assert.equal(formatted[2].quoted.text, sampleTweets[2].quoted_status.full_text);
       assert.deepEqual(formatted[2].images, []);
