@@ -4,12 +4,12 @@ const tweets = () => {
       "createdAt": "Mon Apr 27 13:37:00 +0000 2020",
       "images": [],
       "name": "Rise Vision",
-      "profilePicture": "https://pbs.twimg.com/profile_images/1218249445676126215/8Y-ewcXg_normal.png",
+      "profilePicture": "https://pbs.twimg.com/profile_images/1218249445676126215/8Y-ewcXg.png",
       "quoted": {
         "createdAt": "Mon Apr 27 13:48:07 +0000 2020",
         "images": [],
         "name": "Donald J. Trump",
-        "profilePicture": "https://pbs.twimg.com/profile_images/874276197357596672/kUuht00m_normal.jpg",
+        "profilePicture": "https://pbs.twimg.com/profile_images/874276197357596672/kUuht00m.jpg",
         "quoted": null,
         "screenName": "realDonaldTrump",
         "statistics": {
@@ -42,7 +42,7 @@ const tweets = () => {
         "https://pbs.twimg.com/media/EWY5CcpXQAEX4iG?format=jpg&name=large"
       ],
       "name": "Rise Vision",
-      "profilePicture": "https://pbs.twimg.com/profile_images/1218249445676126215/8Y-ewcXg_normal.png",
+      "profilePicture": "https://pbs.twimg.com/profile_images/1218249445676126215/8Y-ewcXg.png",
       "quoted": null,
       "screenName": "RiseVision",
       "statistics": {

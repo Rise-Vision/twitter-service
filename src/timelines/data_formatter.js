@@ -73,13 +73,17 @@ const getTextField = (tweet) => {
   return null;
 };
 
+const getLargeProfileUrl = (profileUrl) => {
+  return profileUrl.includes("_normal") ? profileUrl.replace("_normal", "") : profileUrl;
+}
+
 const getRootFields = (tweet) => {
   const userFields = {};
 
   if ("user" in tweet) {
     userFields.name = "name" in tweet.user ? tweet.user.name : null;
     userFields.screenName = "screen_name" in tweet.user ? tweet.user.screen_name : null;
-    userFields.profilePicture = "profile_image_url_https" in tweet.user ? tweet.user.profile_image_url_https : null;
+    userFields.profilePicture = "profile_image_url_https" in tweet.user ? getLargeProfileUrl(tweet.user.profile_image_url_https) : null;
   } else {
     userFields.name = null;
     userFields.screenName = null;
