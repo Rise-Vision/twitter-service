@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "preinstall": "npx npm-force-resolutions || true",
-    "test": "eslint . && mocha -t 20000 -r test/mocha-env.js test/unit/** test/integration/**",
+    "pretest": "eslint . ",
+    "test": "mocha -r test/mocha-env.js -t 20000 --recursive --exit test/unit/**",
+    "coverage": "nyc npm run test",
+    "precoveralls": "npm run coverage",
+    "coveralls": "nyc report --reporter=text-lcov | coveralls",
     "dev": "TS_PORT=8080 NODE_ENV=dev nodemon index.js",
     "start": "node index.js"
   },
@@ -20,6 +24,7 @@
   },
   "homepage": "https://github.com/Rise-Vision/twitter-service#readme",
   "devDependencies": {
+    "coveralls": "^3.1.0",
     "eslint": "^6.8.0",
     "eslint-config-standard": "^14.1.0",
     "eslint-plugin-import": "^2.20.1",
@@ -27,7 +32,9 @@
     "eslint-plugin-promise": "^4.2.1",
     "eslint-plugin-standard": "^4.0.1",
     "mocha": "^7.0.1",
+    "mocha-junit-reporter": "^1.23.3",
     "nodemon": "^2.0.2",
+    "nyc": "^15.0.1",
     "simple-mock": "^0.8.0"
   },
   "dependencies": {
@@ -39,6 +46,15 @@
     "redis": "^3.0.2",
     "redis-promise": "git+https://github.com/Rise-Vision/redis-promise.git#1.2.0",
     "twitter": "^1.7.1"
+  },
+  "nyc": {
+    "all": true,
+    "include": [
+      "src/**/*.js"
+    ],
+    "exclude": [
+      "test/**"
+    ]
   },
   "resolutions": {
     "acorn": "^7.1.1",
