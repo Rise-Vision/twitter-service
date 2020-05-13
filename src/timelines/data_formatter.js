@@ -62,12 +62,14 @@ const getUserFields = (tweet) => {
 };
 
 const getTextField = (tweet) => {
-  if ("full_text" in tweet) {
-    return tweet.full_text;
+  const data = "retweeted_status" in tweet ? tweet.retweeted_status : tweet;
+
+  if ("full_text" in data) {
+    return data.full_text;
   }
 
-  if ("text" in tweet) {
-    return tweet.text;
+  if ("text" in data) {
+    return data.text;
   }
 
   return null;

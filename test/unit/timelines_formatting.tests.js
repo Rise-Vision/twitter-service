@@ -124,6 +124,30 @@ describe("Timelines Data Formatting", () => {
       assert(formatted[0].text === text);
     });
 
+    it("should return 'full_text' from 'retweeted_status' if present", () => {
+      const modifiedSampleTweets = utils.deepClone(sampleTweets),
+        text = "original message";
+
+      modifiedSampleTweets[0].retweeted_status = {
+        "full_text": text
+      };
+
+      const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[0].text === text);
+    });
+
+    it("should fallback on 'text' from 'retweeted_status' if 'full_text' not present", () => {
+      const modifiedSampleTweets = utils.deepClone(sampleTweets),
+        text = "original message";
+
+      modifiedSampleTweets[0].retweeted_status = {text};
+
+      const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[0].text === text);
+    })
+
     it("should return an empty array for 'images' if required fields missing", () => {
       // test for missing "extended_entities"
       let modifiedSampleTweets = utils.deepClone(sampleTweets);
