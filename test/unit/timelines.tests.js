@@ -336,7 +336,10 @@ describe("Timelines", () => {
       });
 
       it("should send forbidden error if Twitter API returns invalid token", () => {
-        simple.mock(twitter, "getUserTimeline").rejectWith({error: new Error("Invalid or expired token."), quota: {}});
+        const error = new Error("Invalid or expired token.");
+        error.code = constants.TWITTER_API_INVALID_OR_EXPIRED_TOKEN;
+
+        simple.mock(twitter, "getUserTimeline").rejectWith({error, quota: {}});
 
         return timelines.handleGetTweetsRequest(req, res)
         .then(() => {
