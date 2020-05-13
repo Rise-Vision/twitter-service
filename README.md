@@ -1,4 +1,4 @@
-# Rise Vision Twitter Service [![CircleCI](https://circleci.com/gh/Rise-Vision/twitter-service/tree/master.svg?style=svg)](https://circleci.com/gh/Rise-Vision/twitter-service/tree/master)
+# Rise Vision Twitter Service [![CircleCI](https://circleci.com/gh/Rise-Vision/twitter-service/tree/master.svg?style=svg)](https://circleci.com/gh/Rise-Vision/twitter-service/tree/master) [![Coverage Status](https://coveralls.io/repos/github/Rise-Vision/twitter-service/badge.svg?branch=master)](https://coveralls.io/github/Rise-Vision/twitter-service?branch=master)
 
 ## Introduction
 The Rise Vision Twitter Service verifies user credentials and retrieves tweets of a given user. 
