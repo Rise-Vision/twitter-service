@@ -20,5 +20,6 @@ module.exports = {
   MEDIA_TYPE_ANIMATED_GIF: "animated_gif",
 
   // Twitter API codes: https://developer.twitter.com/en/docs/basics/response-codes
-  TWITTER_API_RESOURCE_NOT_FOUND_CODE: 34
+  TWITTER_API_RESOURCE_NOT_FOUND_CODE: 34,
+  TWITTER_API_INVALID_OR_EXPIRED_TOKEN: 89
 };
