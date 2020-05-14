@@ -61,7 +61,32 @@ const getUserFields = (tweet) => {
   };
 };
 
+const getRetweetTextField = (tweet) => {
+  const data = tweet.retweeted_status;
+  let screenName = 'unknown';
+
+  if ("user" in data) {
+    if ("screen_name" in data.user) {
+      screenName = `@${data.user.screen_name}`
+    }
+  }
+
+  if ("full_text" in data) {
+    return `RT ${screenName}: ${data.full_text}`;
+  }
+
+  if ("text" in data) {
+    return `RT ${screenName}: ${data.text}`;
+  }
+
+  return null;
+}
+
 const getTextField = (tweet) => {
+  if ("retweeted_status" in tweet) {
+    return getRetweetTextField(tweet);
+  }
+
   if ("full_text" in tweet) {
     return tweet.full_text;
   }
