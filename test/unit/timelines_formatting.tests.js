@@ -156,7 +156,13 @@ describe("Timelines Data Formatting", () => {
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
       assert(formatted[0].text === `RT @${name}: ${text}`);
-    })
+    });
+
+    it("should remove the quote link from the text if this is a quote tweet", () => {
+      const formatted = timelineFormatter.getTimelineFormatted(sampleTweets);
+
+      assert.equal(formatted[2].text, "Example quoted tweet️");
+    });
 
     it("should return an empty array for 'images' if required fields missing", () => {
       // test for missing "extended_entities"
