@@ -16,6 +16,12 @@ const isExpectedMediaFormat = (tweet) => {
   return allowedMediaTypes.includes(tweet.extended_entities.media[0].type);
 };
 
+const isQuotedTweet = (tweet) => {
+  if (!("is_quote_status" in tweet)) {return false;}
+
+  return tweet.is_quote_status;
+}
+
 const getFormattedImageURL = (imageItem) => {
   if (!("media_url_https" in imageItem)) {return ""}
 
@@ -35,9 +41,7 @@ const getImagesField = (tweet) => {
 };
 
 const getQuotedField = (tweet) => {
-  if (!("is_quote_status" in tweet)) {return null;}
-
-  if (!tweet.is_quote_status) {return null;}
+  if (!isQuotedTweet(tweet)) {return null;}
 
   if (!("quoted_status" in tweet)) {return null;}
 
@@ -60,6 +64,12 @@ const getUserFields = (tweet) => {
     followers: "followers_count" in tweet.user ? tweet.user.followers_count : null
   };
 };
+
+const getQuoteTextWithoutLink = (text) => {
+  if (!text) {return null;}
+
+  return text.replace(/https:\/\/t.co\/[^\/]+$/, '').trim(); // eslint-disable-line no-useless-escape
+}
 
 const getRetweetTextField = (tweet) => {
   const data = tweet.retweeted_status;
@@ -87,15 +97,19 @@ const getTextField = (tweet) => {
     return getRetweetTextField(tweet);
   }
 
+  let text = "";
+
   if ("full_text" in tweet) {
-    return tweet.full_text;
+    text = tweet.full_text;
+  } else if ("text" in tweet) {
+    text = tweet.text;
   }
 
-  if ("text" in tweet) {
-    return tweet.text;
+  if (text && isQuotedTweet(tweet)) {
+    text = getQuoteTextWithoutLink(text);
   }
 
-  return null;
+  return text || null;
 };
 
 const getLargeProfileUrl = (profileUrl) => {
