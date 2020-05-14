@@ -126,26 +126,36 @@ describe("Timelines Data Formatting", () => {
 
     it("should return 'full_text' from 'retweeted_status' if present", () => {
       const modifiedSampleTweets = utils.deepClone(sampleTweets),
+        name = "original tweeter",
         text = "original message";
 
       modifiedSampleTweets[0].retweeted_status = {
-        "full_text": text
+        "full_text": text,
+        "user": {
+          "screen_name": name
+        }
       };
 
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
-      assert(formatted[0].text === text);
+      assert(formatted[0].text === `RT @${name}: ${text}`);
     });
 
     it("should fallback on 'text' from 'retweeted_status' if 'full_text' not present", () => {
       const modifiedSampleTweets = utils.deepClone(sampleTweets),
+        name = "original tweeter",
         text = "original message";
 
-      modifiedSampleTweets[0].retweeted_status = {text};
+      modifiedSampleTweets[0].retweeted_status = {
+        text,
+        "user": {
+          "screen_name": name
+        }
+      };
 
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
-      assert(formatted[0].text === text);
+      assert(formatted[0].text === `RT @${name}: ${text}`);
     })
 
     it("should return an empty array for 'images' if required fields missing", () => {
