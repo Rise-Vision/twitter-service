@@ -6,6 +6,7 @@ const simple = require("simple-mock");
 const Twitter = require('twitter');
 const twitter = require("../../src/twitter");
 const config = require("../../src/config");
+const constants = require("../../src/constants");
 
 const sampleTweets = require("./samples/tweets-timeline").data;
 
@@ -17,21 +18,21 @@ describe("Twitter", () => {
   describe("isInvalidOrExpiredTokenError", () => {
     it("should recognize invalid or expired token error", () => {
       const result = twitter.isInvalidOrExpiredTokenError({
-        message: "Invalid or expired token."
+        code: constants.TWITTER_API_INVALID_OR_EXPIRED_TOKEN
       });
 
       assert(result);
     });
 
-    it("should not recognize invalid or expired token error on other message string", () => {
+    it("should not recognize invalid or expired token error on other error code", () => {
       const result = twitter.isInvalidOrExpiredTokenError({
-        message: "Another error."
+        code: 92
       });
 
       assert(!result);
     });
 
-    it("should not recognize invalid or expired token error when there is no message string", () => {
+    it("should not recognize invalid or expired token error when there is no code", () => {
       const result = twitter.isInvalidOrExpiredTokenError({});
 
       assert(!result);

@@ -50,8 +50,11 @@ describe("Credentials", () => {
     });
 
     it("should reject if Twitter credentials are not valid", (done) => {
+      const error = new Error("Invalid or expired token");
+      error.code = constants.TWITTER_API_INVALID_OR_EXPIRED_TOKEN;
+
       simple.mock(db, "getCredentials").resolveWith({});
-      simple.mock(twitter, "verifyCredentials").rejectWith(new Error("Invalid or expired token."));
+      simple.mock(twitter, "verifyCredentials").rejectWith(error);
 
       credentials.handleVerifyCredentialsRequest(req, res)
       .then(() => {

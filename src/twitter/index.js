@@ -69,7 +69,7 @@ const invokeEndpoint = (clientCredentials, endpoint, args) => {
 };
 
 const isInvalidOrExpiredTokenError = error => {
-  return error.message && error.message === "Invalid or expired token.";
+  return error.code === constants.TWITTER_API_INVALID_OR_EXPIRED_TOKEN;
 };
 
 const isQuotaLimitReachedError = error => {
