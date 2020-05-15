@@ -155,5 +155,7 @@ const getTimelineFormatted = (timeline) => {
 };
 
 module.exports = {
-  getTimelineFormatted
+  getQuoteTextWithoutLink,
+  getTimelineFormatted,
+  isQuotedTweet
 };
