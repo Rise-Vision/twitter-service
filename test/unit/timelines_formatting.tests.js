@@ -141,6 +141,17 @@ describe("Timelines Data Formatting", () => {
       assert(formatted[0].text === null);
     });
 
+    it("should remove all shortened urls from the text", () => {
+      const modifiedSampleTweets = utils.deepClone(sampleTweets),
+        text = "original message";
+
+      modifiedSampleTweets[0].full_text = `${text} https://t.co/test1 https://t.co/test2 https://t.co/test3`;
+
+      const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
+
+      assert(formatted[0].text === text);
+    });
+
     it("should fallback on 'text' if 'full_text' not present", () => {
       const modifiedSampleTweets = utils.deepClone(sampleTweets),
         text = "Testing fallback on text";
@@ -188,7 +199,7 @@ describe("Timelines Data Formatting", () => {
       assert(formatted[0].text === `RT @${name}: ${text}`);
     });
 
-    it("should remove the quote link from the text if this is a quote tweet", () => {
+    it("should remove the shortened url from the text for quote tweets", () => {
       const formatted = timelineFormatter.getTimelineFormatted(sampleTweets);
 
       assert.equal(formatted[2].text, "Example quoted tweet️");
@@ -271,7 +282,7 @@ describe("Timelines Data Formatting", () => {
       assert.equal(formatted[2].quoted.screenName, sampleTweets[2].quoted_status.user.screen_name);
       assert.equal(formatted[2].quoted.profilePicture, "https://pbs.twimg.com/profile_images/1197533022263877635/JxM1Ba0d.jpg");
       assert.equal(formatted[2].quoted.createdAt, sampleTweets[2].quoted_status.created_at);
-      assert.equal(formatted[2].quoted.text, sampleTweets[2].quoted_status.full_text);
+      assert.equal(formatted[2].quoted.text, timelineFormatter.getTextWithoutShortenedUrls(sampleTweets[2].quoted_status.full_text));
       assert.deepEqual(formatted[2].images, []);
 
       assert(formatted[2].quoted.quoted === null);

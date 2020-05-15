@@ -97,19 +97,15 @@ const getTextField = (tweet) => {
     return getRetweetTextField(tweet);
   }
 
-  let text = "";
-
   if ("full_text" in tweet) {
-    text = tweet.full_text;
-  } else if ("text" in tweet) {
-    text = tweet.text;
+    return getTextWithoutShortenedUrls(tweet.full_text);
   }
 
-  if (text && isQuotedTweet(tweet)) {
-    text = getTextWithoutShortenedUrls(text);
+  if ("text" in tweet) {
+    return getTextWithoutShortenedUrls(tweet.text);
   }
 
-  return text || null;
+  return null;
 };
 
 const getLargeProfileUrl = (profileUrl) => {
