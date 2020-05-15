@@ -28,17 +28,23 @@ describe("Timelines Data Formatting", () => {
     });
   });
 
-  describe("getQuoteTextWithoutLink", () => {
-    it("should return the text without the API shortened quote url at the end", () => {
-      assert.equal(timelineFormatter.getQuoteTextWithoutLink(sampleTweets[2].full_text), "Example quoted tweet️");
+  describe("getTextWithoutShortenedUrls()", () => {
+    it("should return the text without the API shortened url at the end", () => {
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(sampleTweets[2].full_text), "Example quoted tweet️");
     });
 
-    it("should return the text unchanged if the API did not add shortened quote url at the end", () => {
-      assert.equal(timelineFormatter.getQuoteTextWithoutLink(sampleTweets[0].full_text), sampleTweets[0].full_text);
+    it("should return the text without multiple shortened urls at the end", () => {
+      const text = "original message";
+
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(`${text} https://t.co/TEST1 https://t.co/TEST2`), text);
+    });
+
+    it("should return the text unchanged if the API did not add shortened url at the end", () => {
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(sampleTweets[0].full_text), sampleTweets[0].full_text);
     });
 
     it("should return the text unchanged if the url at the end is not an API shortened url", () => {
-      assert.equal(timelineFormatter.getQuoteTextWithoutLink(`${sampleTweets[0].full_text} https://test.com`), `${sampleTweets[0].full_text} https://test.com`);
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(`${sampleTweets[0].full_text} https://test.com`), `${sampleTweets[0].full_text} https://test.com`);
     });
   });
 
@@ -148,13 +154,13 @@ describe("Timelines Data Formatting", () => {
       assert(formatted[0].text === text);
     });
 
-    it("should return 'full_text' from 'retweeted_status' if present", () => {
+    it("should return 'full_text' from 'retweeted_status' if present and without shortened urls", () => {
       const modifiedSampleTweets = utils.deepClone(sampleTweets),
         name = "original tweeter",
         text = "original message";
 
       modifiedSampleTweets[0].retweeted_status = {
-        "full_text": text,
+        "full_text": `${text} https://t.co/TEST1 https://t.co/TEST2`,
         "user": {
           "screen_name": name
         }

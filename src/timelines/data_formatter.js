@@ -65,15 +65,15 @@ const getUserFields = (tweet) => {
   };
 };
 
-const getQuoteTextWithoutLink = (text) => {
+const getTextWithoutShortenedUrls = (text) => {
   if (!text) {return null;}
 
-  return text.replace(/https:\/\/t.co\/[^\/]+$/, '').trim(); // eslint-disable-line no-useless-escape
+  return text.replace(/https:\/\/t.co\/\S+/gi, '').trim(); // eslint-disable-line no-useless-escape
 }
 
 const getRetweetTextField = (tweet) => {
   const data = tweet.retweeted_status;
-  let screenName = 'unknown';
+  let screenName = "unknown";
 
   if ("user" in data) {
     if ("screen_name" in data.user) {
@@ -82,11 +82,11 @@ const getRetweetTextField = (tweet) => {
   }
 
   if ("full_text" in data) {
-    return `RT ${screenName}: ${data.full_text}`;
+    return `RT ${screenName}: ${getTextWithoutShortenedUrls(data.full_text)}`;
   }
 
   if ("text" in data) {
-    return `RT ${screenName}: ${data.text}`;
+    return `RT ${screenName}: ${getTextWithoutShortenedUrls(data.text)}`;
   }
 
   return null;
@@ -106,7 +106,7 @@ const getTextField = (tweet) => {
   }
 
   if (text && isQuotedTweet(tweet)) {
-    text = getQuoteTextWithoutLink(text);
+    text = getTextWithoutShortenedUrls(text);
   }
 
   return text || null;
@@ -155,7 +155,7 @@ const getTimelineFormatted = (timeline) => {
 };
 
 module.exports = {
-  getQuoteTextWithoutLink,
+  getTextWithoutShortenedUrls,
   getTimelineFormatted,
   isQuotedTweet
 };
