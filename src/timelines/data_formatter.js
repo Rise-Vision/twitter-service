@@ -82,11 +82,11 @@ const getRetweetTextField = (tweet) => {
   }
 
   if ("full_text" in data) {
-    return `RT ${screenName}: ${getTextWithoutShortenedUrls(data.full_text)}`;
+    return `RT ${screenName}: ${data.full_text}`;
   }
 
   if ("text" in data) {
-    return `RT ${screenName}: ${getTextWithoutShortenedUrls(data.text)}`;
+    return `RT ${screenName}: ${data.text}`;
   }
 
   return null;
@@ -97,12 +97,14 @@ const getTextField = (tweet) => {
     return getRetweetTextField(tweet);
   }
 
+  const isQuote = isQuotedTweet(tweet);
+
   if ("full_text" in tweet) {
-    return getTextWithoutShortenedUrls(tweet.full_text);
+    return isQuote ? getTextWithoutShortenedUrls(tweet.full_text) : tweet.full_text;
   }
 
   if ("text" in tweet) {
-    return getTextWithoutShortenedUrls(tweet.text);
+    return isQuote ? getTextWithoutShortenedUrls(tweet.text) : tweet.text;
   }
 
   return null;
