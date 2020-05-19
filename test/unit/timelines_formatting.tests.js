@@ -18,6 +18,36 @@ describe("Timelines Data Formatting", () => {
     simple.restore();
   });
 
+  describe("isQuotedTweet", () => {
+    it("should return false when not a quote tweet", () => {
+      assert(!timelineFormatter.isQuotedTweet(sampleTweets[0]));
+    });
+
+    it("should return true when is a quote tweet", () => {
+      assert(timelineFormatter.isQuotedTweet(sampleTweets[2]));
+    });
+  });
+
+  describe("getTextWithoutShortenedUrls()", () => {
+    it("should return the text without the API shortened url at the end", () => {
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(sampleTweets[2].full_text), "Example quoted tweet️");
+    });
+
+    it("should return the text without multiple shortened urls at the end", () => {
+      const text = "original message";
+
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(`${text} https://t.co/TEST1 https://t.co/TEST2`), text);
+    });
+
+    it("should return the text unchanged if the API did not add shortened url at the end", () => {
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(sampleTweets[0].full_text), sampleTweets[0].full_text);
+    });
+
+    it("should return the text unchanged if the url at the end is not an API shortened url", () => {
+      assert.equal(timelineFormatter.getTextWithoutShortenedUrls(`${sampleTweets[0].full_text} https://test.com`), `${sampleTweets[0].full_text} https://test.com`);
+    });
+  });
+
   describe("getTimelineFormatted / statistics", () => {
     it("should populate statistics values", () => {
       const formatted = timelineFormatter.getTimelineFormatted(sampleTweets);
@@ -156,7 +186,13 @@ describe("Timelines Data Formatting", () => {
       const formatted = timelineFormatter.getTimelineFormatted(modifiedSampleTweets);
 
       assert(formatted[0].text === `RT @${name}: ${text}`);
-    })
+    });
+
+    it("should remove the shortened url from the text for quote tweets", () => {
+      const formatted = timelineFormatter.getTimelineFormatted(sampleTweets);
+
+      assert.equal(formatted[2].text, "Example quoted tweet️");
+    });
 
     it("should return an empty array for 'images' if required fields missing", () => {
       // test for missing "extended_entities"

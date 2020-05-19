@@ -16,6 +16,12 @@ const isExpectedMediaFormat = (tweet) => {
   return allowedMediaTypes.includes(tweet.extended_entities.media[0].type);
 };
 
+const isQuotedTweet = (tweet) => {
+  if (!("is_quote_status" in tweet)) {return false;}
+
+  return tweet.is_quote_status;
+}
+
 const getFormattedImageURL = (imageItem) => {
   if (!("media_url_https" in imageItem)) {return ""}
 
@@ -35,9 +41,7 @@ const getImagesField = (tweet) => {
 };
 
 const getQuotedField = (tweet) => {
-  if (!("is_quote_status" in tweet)) {return null;}
-
-  if (!tweet.is_quote_status) {return null;}
+  if (!isQuotedTweet(tweet)) {return null;}
 
   if (!("quoted_status" in tweet)) {return null;}
 
@@ -61,9 +65,15 @@ const getUserFields = (tweet) => {
   };
 };
 
+const getTextWithoutShortenedUrls = (text) => {
+  if (!text) {return null;}
+
+  return text.replace(/https:\/\/t.co\/\S+/gi, '').trim(); // eslint-disable-line no-useless-escape
+}
+
 const getRetweetTextField = (tweet) => {
   const data = tweet.retweeted_status;
-  let screenName = 'unknown';
+  let screenName = "unknown";
 
   if ("user" in data) {
     if ("screen_name" in data.user) {
@@ -87,12 +97,14 @@ const getTextField = (tweet) => {
     return getRetweetTextField(tweet);
   }
 
+  const isQuote = isQuotedTweet(tweet);
+
   if ("full_text" in tweet) {
-    return tweet.full_text;
+    return isQuote ? getTextWithoutShortenedUrls(tweet.full_text) : tweet.full_text;
   }
 
   if ("text" in tweet) {
-    return tweet.text;
+    return isQuote ? getTextWithoutShortenedUrls(tweet.text) : tweet.text;
   }
 
   return null;
@@ -141,5 +153,7 @@ const getTimelineFormatted = (timeline) => {
 };
 
 module.exports = {
-  getTimelineFormatted
+  getTextWithoutShortenedUrls,
+  getTimelineFormatted,
+  isQuotedTweet
 };
